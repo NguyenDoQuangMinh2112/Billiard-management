@@ -1,7 +1,9 @@
 // API Integration Helper for Billiard Management Frontend
 // This file connects the React frontend to the backend API
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.MODE === 'production'
+    ? 'https://limited-elana-123minh-53a2b636.koyeb.app/api'
+    : 'http://localhost:3000/api';
 
 // API Response Type (for documentation purposes in JS)
 // interface ApiResponse<T> {
