@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { billiardAPI } from '../services/api';
 
 const GameContext = createContext();
 
@@ -23,47 +24,112 @@ export const GameProvider = ({ children }) => {
   };
 
   // Initialize with default pool players
-  const [players, setPlayers] = useState(() => {
-    const saved = localStorage.getItem('pool_players');
-    return saved ? JSON.parse(saved) : ['Minh', 'Toàn', 'Hải'];
-  });
+  const [players, setPlayers] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [payerIndex, setPayerIndex] = useState(0);
+  const [nextPayer, setNextPayer] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [matches, setMatches] = useState(() => {
-    const saved = localStorage.getItem('pool_matches');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Track who is paying next (index of players array)
-  // We can derive this from match history, but storing an index allows for flexibility overrides
-  const [payerIndex, setPayerIndex] = useState(() => {
-    const saved = localStorage.getItem('pool_payer_index');
-    return saved ? JSON.parse(saved) : 0;
-  });
-
+  // Fetch initial data from API
   useEffect(() => {
-    localStorage.setItem('pool_players', JSON.stringify(players));
-    localStorage.setItem('pool_matches', JSON.stringify(matches));
-    localStorage.setItem('pool_payer_index', JSON.stringify(payerIndex));
-  }, [players, matches, payerIndex]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch players
+        const playersResponse = await billiardAPI.getPlayers();
+        if (playersResponse.success && playersResponse.data) {
+          setPlayers(playersResponse.data.map(p => p.name));
+        }
 
-  const addMatch = (matchData) => {
-    // matchData: { winner, loser, cost, date }
-    const newMatch = {
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        payer: players[payerIndex], // The current designated payer pays this match
-        ...matchData
+        // Fetch recent matches
+        const matchesResponse = await billiardAPI.getRecentMatches(50);
+        if (matchesResponse.success && matchesResponse.data) {
+          setMatches(matchesResponse.data);
+        }
+
+        // Fetch next payer
+        const payerResponse = await billiardAPI.getNextPayer();
+        if (payerResponse.success && payerResponse.data) {
+          setNextPayer(payerResponse.data.nextPayer);
+        }
+
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        setError('Failed to load data from server');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setMatches([newMatch, ...matches]);
-    
-    // Rotate payer
-    setPayerIndex((prev) => (prev + 1) % players.length);
+    fetchData();
+  }, []); // Run once on mount
+
+  // Update payerIndex when players or nextPayer changes
+  useEffect(() => {
+    if (nextPayer && players.length > 0) {
+      const index = players.indexOf(nextPayer);
+      if (index !== -1) {
+        setPayerIndex(index);
+      }
+    }
+  }, [nextPayer, players]);
+
+  const addMatch = async (matchData) => {
+    try {
+      // matchData: { winner, loser, cost }
+      const response = await billiardAPI.createMatch(
+        matchData.winner,
+        matchData.loser,
+        matchData.cost
+      );
+
+      if (response.success && response.data) {
+        // Add the new match to local state
+        setMatches([response.data, ...matches]);
+        
+        // Update next payer info
+        const payerResponse = await billiardAPI.getNextPayer();
+        if (payerResponse.success && payerResponse.data) {
+          setNextPayer(payerResponse.data.nextPayer);
+        }
+        
+        return { success: true, data: response.data };
+      } else {
+        console.error('Failed to create match:', response.error);
+        return { success: false, error: response.error || 'Failed to create match' };
+      }
+    } catch (error) {
+      console.error('Error creating match:', error);
+      return { success: false, error: 'Failed to create match' };
+    }
   };
 
-  const deleteMatch = (id) => {
-     setMatches(matches.filter(m => m.id !== id));
-     // Optional: Revert payer rotation? For now, keep it simple.
+  const deleteMatch = async (id) => {
+    try {
+      const response = await billiardAPI.deleteMatch(id);
+      
+      if (response.success) {
+        // Remove match from local state
+        setMatches(matches.filter(m => m.id !== id));
+        
+        // Refresh next payer info
+        const payerResponse = await billiardAPI.getNextPayer();
+        if (payerResponse.success && payerResponse.data) {
+          setNextPayer(payerResponse.data.nextPayer);
+        }
+        
+        return { success: true };
+      } else {
+        console.error('Failed to delete match:', response.error);
+        return { success: false, error: response.error || 'Failed to delete match' };
+      }
+    } catch (error) {
+      console.error('Error deleting match:', error);
+      return { success: false, error: 'Failed to delete match' };
+    }
   };
 
   const getStats = () => {
@@ -107,7 +173,6 @@ export const GameProvider = ({ children }) => {
   };
 
   const allStats = getStats();
-  const nextPayer = players[payerIndex];
 
   return (
     <GameContext.Provider value={{
@@ -115,12 +180,14 @@ export const GameProvider = ({ children }) => {
         matches,
         payerIndex,
         allStats,
-        nextPayer,
+        nextPayer: nextPayer || players[payerIndex],
         addMatch,
         deleteMatch,
         getExpenses,
         theme,
-        toggleTheme
+        toggleTheme,
+        loading,
+        error
     }}>
       {children}
     </GameContext.Provider>

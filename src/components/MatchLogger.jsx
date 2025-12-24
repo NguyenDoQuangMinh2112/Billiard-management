@@ -2,33 +2,79 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, DollarSign, User, Trophy, Camera, ScanLine, Loader, UploadCloud } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { useToast } from './Toast';
 import Tesseract from 'tesseract.js';
 
 const MatchLogger = ({ isOpen, onClose }) => {
     const { players, nextPayer, addMatch } = useGame();
+    const { success, error: showError } = useToast();
+    
     const [winner, setWinner] = useState(players[0]);
     const [loser, setLoser] = useState(players[1]);
     const [cost, setCost] = useState('');
+    const [errors, setErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     // AI Scanning States
     const [isScanning, setIsScanning] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatus, setScanStatus] = useState('');
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!cost) return;
+    const validateForm = () => {
+        const newErrors = {};
 
-        addMatch({
-            winner,
-            loser,
-            cost: parseFloat(cost)
-        });
+        // Validate winner and loser are different
+        if (winner === loser) {
+            newErrors.players = 'Winner and loser must be different players';
+        }
+
+        // Validate cost
+        if (!cost || String(cost).trim() === '') {
+            newErrors.cost = 'Cost is required';
+        } else if (parseFloat(cost) <= 0) {
+            newErrors.cost = 'Cost must be greater than 0';
+        } else if (parseFloat(cost) > 10000000) {
+            newErrors.cost = 'Cost seems too high. Please verify.';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         
-        // Reset
-        setCost('');
-        setScanStatus('');
-        onClose();
+        // Validate form
+        if (!validateForm()) {
+            showError('Please fix the errors before submitting');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const result = await addMatch({
+                winner,
+                loser,
+                cost: parseFloat(cost)
+            });
+
+            if (result && result.success) {
+                success(`Match logged! ${winner} wins! 🎉`);
+                // Reset form
+                setCost('');
+                setScanStatus('');
+                setErrors({});
+                onClose();
+            } else {
+                showError(result?.error || 'Failed to log match. Please try again.');
+            }
+        } catch (err) {
+            console.error('Error submitting match:', err);
+            showError('Failed to log match. Please check your connection.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleFileUpload = async (e) => {
@@ -201,7 +247,7 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                             <select 
                                                 value={winner} 
                                                 onChange={(e) => setWinner(e.target.value)}
-                                                className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-lg focus:border-[var(--color-primary)] outline-none appearance-none cursor-pointer hover:bg-white/5 transition-colors"
+                                                className={`w-full bg-black/40 border ${errors.players ? 'border-red-500' : 'border-white/10'} rounded-xl p-3 text-lg focus:border-[var(--color-primary)] outline-none appearance-none cursor-pointer hover:bg-white/5 transition-colors`}
                                             >
                                                 {players.map(p => (
                                                     <option key={p} value={p}>{p}</option>
@@ -218,9 +264,9 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                             <select 
                                                 value={loser} 
                                                 onChange={(e) => setLoser(e.target.value)}
-                                                className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-lg focus:border-red-500 outline-none appearance-none cursor-pointer hover:bg-white/5 transition-colors"
+                                                className={`w-full bg-black/40 border ${errors.players ? 'border-red-500' : 'border-white/10'} rounded-xl p-3 text-lg focus:border-red-500 outline-none appearance-none cursor-pointer hover:bg-white/5 transition-colors`}
                                             >
-                                                {players.filter(p => p !== winner).map(p => (
+                                                {players.map(p => (
                                                     <option key={p} value={p}>{p}</option>
                                                 ))}
                                             </select>
@@ -230,6 +276,9 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                         </div>
                                     </div>
                                 </div>
+                                {errors.players && (
+                                    <p className="text-xs text-red-500 mt-1 font-medium">{errors.players}</p>
+                                )}
 
                                 <div className="space-y-2">
                                     <label className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Cost (VND)</label>
@@ -240,7 +289,7 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                             value={cost}
                                             onChange={(e) => setCost(e.target.value)}
                                             placeholder="0"
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-10 text-2xl font-mono font-bold focus:border-[var(--color-accent)] outline-none transition-all placeholder:text-gray-700"
+                                            className={`w-full bg-black/40 border ${errors.cost ? 'border-red-500' : 'border-white/10'} rounded-xl p-4 pl-10 text-2xl font-mono font-bold focus:border-[var(--color-accent)] outline-none transition-all placeholder:text-gray-700`}
                                             required
                                         />
                                         {/* Quick selection tags */}
@@ -257,10 +306,24 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                             ))}
                                         </div>
                                     </div>
+                                    {errors.cost && (
+                                        <p className="text-xs text-red-500 font-medium">{errors.cost}</p>
+                                    )}
                                 </div>
 
-                                <button type="submit" className="w-full py-4 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold text-lg rounded-xl transition-all shadow-lg shadow-[var(--color-primary)]/20 hover:shadow-[var(--color-accent)]/30 transform hover:-translate-y-1 active:translate-y-0">
-                                    Log Match
+                                <button 
+                                    type="submit" 
+                                    disabled={isSubmitting}
+                                    className="w-full py-4 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold text-lg rounded-xl transition-all shadow-lg shadow-[var(--color-primary)]/20 hover:shadow-[var(--color-accent)]/30 transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:translate-y-0 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader className="animate-spin" size={20} />
+                                            Logging...
+                                        </>
+                                    ) : (
+                                        'Log Match'
+                                    )}
                                 </button>
                             </form>
                         </div>
