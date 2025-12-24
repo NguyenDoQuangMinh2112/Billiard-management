@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', sans-serif;
+    --font-display: 'Orbitron', sans-serif;
+
+    --color-primary: #00f0ff;
+    /* Electric Cyan */
+    --color-secondary: #7000df;
+    /* Deep Purple */
+    --color-accent: #39ff14;
+    /* Neon Green */
+
+    --color-background: #050510;
+    --color-surface: #121225;
+    --color-text-main: #ffffff;
+    --color-text-dim: #9ca3af;
+    --color-highlight: rgba(255, 255, 255, 0.05);
+
+    --animate-float: float 6s ease-in-out infinite;
+    --animate-pulse-glow: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Light Mode Overrides */
+.light-mode {
+    --color-primary: #007780;
+    /* Darker Cyan for visibility on white */
+    --color-secondary: #5000a0;
+    --color-accent: #158000;
+
+    --color-background: #f3f4f6;
+    --color-surface: #ffffff;
+    --color-text-main: #111827;
+    --color-text-dim: #4b5563;
+    --color-highlight: rgba(0, 0, 0, 0.05);
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 20px var(--color-primary);
+    }
+
+    50% {
+        opacity: 0.5;
+        box-shadow: 0 0 5px var(--color-primary);
+    }
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-text-main);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    margin: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::selection {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Utility to hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.glass-panel {
+    background: rgba(18, 18, 37, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.light-mode .glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.text-gradient {
+    background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
