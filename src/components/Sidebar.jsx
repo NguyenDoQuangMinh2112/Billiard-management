@@ -17,7 +17,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     return (
         <motion.div 
             animate={{ width: collapsed ? 80 : 250 }}
-            className="h-screen bg-[var(--color-surface)] border-r border-white/5 flex flex-col sticky top-0 z-40 transition-all"
+            className="hidden md:flex h-screen bg-[var(--color-surface)] border-r border-white/5 flex-col sticky top-0 z-40 transition-all"
         >
             {/* Logo Area */}
             <div className="p-6 flex items-center gap-3 overflow-hidden">

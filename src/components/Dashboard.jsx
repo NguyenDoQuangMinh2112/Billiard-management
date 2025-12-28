@@ -20,7 +20,7 @@ const Dashboard = () => {
     const topPlayer = allStats[0];
 
     return (
-        <div className="container mx-auto px-6 py-8">
+        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
             
             {/* Header / Actions */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">

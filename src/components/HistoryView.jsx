@@ -10,7 +10,7 @@ const HistoryView = () => {
     });
 
     return (
-        <div className="container mx-auto px-6 py-8">
+        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
             <h1 className="text-3xl font-display font-bold mb-8">Match History</h1>
 
             <div className="space-y-4">
@@ -61,7 +61,7 @@ const HistoryView = () => {
                                             deleteMatch(match.id);
                                         }
                                     }}
-                                    className="p-3 bg-red-500/10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all transform hover:scale-110"
+                                    className="p-3 bg-red-500/10 text-red-500 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all transform hover:scale-110"
                                     title="Delete Record"
                                 >
                                     <Trash2 size={20} />
