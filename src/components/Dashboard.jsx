@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
-import MatchLogger from './MatchLogger';
 import StatsCharts from './StatsCharts';
 import Leaderboard from './Leaderboard';
-import { Plus, Wallet, Trophy, Clock, ArrowUpRight } from 'lucide-react';
+import { Wallet, Trophy, Clock, ArrowUpRight } from 'lucide-react';
 
 const Dashboard = () => {
     const { nextPayer, allStats, getExpenses, matches } = useGame();
-    const [isLoggerOpen, setIsLoggerOpen] = useState(false);
     const [timeframe, setTimeframe] = useState('month'); 
 
     const expenses = getExpenses(timeframe);
@@ -28,25 +26,16 @@ const Dashboard = () => {
                     <h1 className="text-3xl font-display font-bold">Overview</h1>
                     <p className="text-[var(--color-text-dim)]">Welcome back to the arena.</p>
                 </div>
-                <div className="flex gap-4">
-                    <div className="flex bg-black/20 rounded-lg p-1 border border-white/5">
-                        {['week', 'month', 'year'].map(t => (
-                            <button 
-                                key={t}
-                                onClick={() => setTimeframe(t)}
-                                className={`px-4 py-2 text-sm font-bold rounded-md capitalize transition-all ${timeframe === t ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] shadow ring-1 ring-white/10' : 'text-gray-500 hover:text-gray-300'}`}
-                            >
-                                {t}
-                            </button>
-                        ))}
-                    </div>
-                    <button 
-                        onClick={() => setIsLoggerOpen(true)}
-                        className="bg-[var(--color-primary)] text-black px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[var(--color-accent)] transition-all shadow-lg shadow-[var(--color-primary)]/20"
-                    >
-                        <Plus size={20} />
-                        Log Match
-                    </button>
+                <div className="flex bg-black/20 rounded-lg p-1 border border-white/5">
+                    {['week', 'month', 'year'].map(t => (
+                        <button 
+                            key={t}
+                            onClick={() => setTimeframe(t)}
+                            className={`px-4 py-2 text-sm font-bold rounded-md capitalize transition-all ${timeframe === t ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] shadow ring-1 ring-white/10' : 'text-gray-500 hover:text-gray-300'}`}
+                        >
+                            {t}
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -148,8 +137,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
-
-            <MatchLogger isOpen={isLoggerOpen} onClose={() => setIsLoggerOpen(false)} />
         </div>
     );
 };

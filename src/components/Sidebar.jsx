@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Trophy, History, Settings, LogOut, ChevronRight, ChevronLeft, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Trophy, History, Settings, LogOut, ChevronRight, ChevronLeft, Sun, Moon, Plus } from 'lucide-react';
 
 const Sidebar = ({ activeTab, onTabChange }) => {
     const { theme, toggleTheme } = useGame();
@@ -9,6 +9,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'logmatch', label: 'Log Match', icon: Plus },
         { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
         { id: 'history', label: 'Match History', icon: History },
         { id: 'settings', label: 'Settings', icon: Settings },

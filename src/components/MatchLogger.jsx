@@ -4,9 +4,10 @@ import { X, DollarSign, User, Trophy, Camera, ScanLine, Loader, UploadCloud } fr
 import { useGame } from '../context/GameContext';
 import { useToast } from './Toast';
 import Tesseract from 'tesseract.js';
+import ScoreBoard from './ScoreBoard';
 
 const MatchLogger = ({ isOpen, onClose }) => {
-    const { players, nextPayer, addMatch } = useGame();
+    const { players, nextPayer, addMatch, matches } = useGame();
     const { success, error: showError } = useToast();
     
     const [winner, setWinner] = useState(players[0]);
@@ -180,6 +181,11 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                 </span>
                                 Log Match Result
                             </h2>
+
+                             {/* Live Scoreboard */}
+                             <div className="mb-6">
+                                <ScoreBoard players={players} matches={matches} /> 
+                             </div>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* AI Scanner Section */}
