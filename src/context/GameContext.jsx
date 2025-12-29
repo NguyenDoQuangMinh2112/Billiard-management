@@ -52,7 +52,7 @@ export const GameProvider = ({ children }) => {
         // Fetch next payer
         const payerResponse = await billiardAPI.getNextPayer();
         if (payerResponse.success && payerResponse.data) {
-          setNextPayer(payerResponse.data.nextPayer);
+          setNextPayer(payerResponse.data.name);
         }
 
         setError(null);
@@ -126,7 +126,7 @@ export const GameProvider = ({ children }) => {
         // Update next payer info
         const payerResponse = await billiardAPI.getNextPayer();
         if (payerResponse.success && payerResponse.data) {
-          const newNextPayer = payerResponse.data.nextPayer;
+          const newNextPayer = payerResponse.data.name;
           setNextPayer(newNextPayer);
           
           // Add to Notification History
