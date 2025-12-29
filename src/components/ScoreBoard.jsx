@@ -3,18 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, RotateCcw } from 'lucide-react';
 
 const ScoreBoard = ({ players, matches, onScoreUpdate }) => {
-  // Initialize live scores from match history
-  const initialScores = players.reduce((acc, player) => {
-    acc[player] = { wins: 0, losses: 0 };
-    return acc;
-  }, {});
+  // Helper function to create zero scores
+  const createZeroScores = () => {
+    return players.reduce((acc, player) => {
+      acc[player] = { wins: 0, losses: 0 };
+      return acc;
+    }, {});
+  };
 
-  matches.forEach(match => {
-    if (initialScores[match.winner]) initialScores[match.winner].wins += 1;
-    if (initialScores[match.loser]) initialScores[match.loser].losses += 1;
-  });
+  // Always start from 0, not from match history
+  const [liveScores, setLiveScores] = useState(createZeroScores);
 
-  const [liveScores, setLiveScores] = useState(initialScores);
+  // Auto-reset to 0 when a new match is submitted (matches.length changes)
+  useEffect(() => {
+    setLiveScores(createZeroScores());
+  }, [matches.length]);
 
   // Notify parent component of score updates
   useEffect(() => {
@@ -33,8 +36,9 @@ const ScoreBoard = ({ players, matches, onScoreUpdate }) => {
     }));
   };
 
+  // Manual reset to 0
   const resetScores = () => {
-    setLiveScores(initialScores);
+    setLiveScores(createZeroScores());
   };
 
   return (
@@ -43,16 +47,16 @@ const ScoreBoard = ({ players, matches, onScoreUpdate }) => {
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Live Score</h3>
         <button
           onClick={resetScores}
-          className="flex items-center gap-1 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 active:bg-white/15 rounded-lg text-sm text-gray-400 hover:text-white transition-all min-h-[44px]"
         >
-          <RotateCcw size={12} />
+          <RotateCcw size={16} />
           Reset
         </button>
       </div>
       
-      <div className="flex justify-center gap-6 py-6 overflow-x-auto">
+      <div className="flex justify-center gap-2 py-6 overflow-x-auto">
         {players.map((player) => (
-          <div key={player} className="flex flex-col items-center">
+          <div key={player} className="flex flex-col items-center flex-shrink-0">
             {/* Player Name */}
             <div className="mb-3 font-display text-xl font-bold tracking-wider text-[var(--color-primary)] uppercase drop-shadow-[0_0_5px_rgba(0,240,255,0.5)]">
               {player}
@@ -104,19 +108,19 @@ const ScoreBoard = ({ players, matches, onScoreUpdate }) => {
                 </div>
               </div>
 
-              {/* Increment Buttons */}
-              <div className="flex gap-1 mt-2">
+              {/* Increment Buttons - Mobile Optimized */}
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => incrementScore(player, 'wins')}
-                  className="flex-1 bg-[var(--color-accent)]/20 hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30 rounded p-1 transition-colors group"
+                  className="flex-1 bg-[var(--color-accent)]/20 hover:bg-[var(--color-accent)]/30 active:bg-[var(--color-accent)]/40 border border-[var(--color-accent)]/30 rounded-lg p-3 transition-all group min-h-[44px] flex items-center justify-center"
                 >
-                  <Plus size={14} className="mx-auto text-[var(--color-accent)] group-hover:scale-110 transition-transform" />
+                  <Plus size={20} className="text-[var(--color-accent)] group-hover:scale-110 group-active:scale-95 transition-transform" />
                 </button>
                 <button
                   onClick={() => incrementScore(player, 'losses')}
-                  className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded p-1 transition-colors group"
+                  className="flex-1 bg-red-500/20 hover:bg-red-500/30 active:bg-red-500/40 border border-red-500/30 rounded-lg p-3 transition-all group min-h-[44px] flex items-center justify-center"
                 >
-                  <Plus size={14} className="mx-auto text-red-400 group-hover:scale-110 transition-transform" />
+                  <Plus size={20} className="text-red-400 group-hover:scale-110 group-active:scale-95 transition-transform" />
                 </button>
               </div>
             </div>

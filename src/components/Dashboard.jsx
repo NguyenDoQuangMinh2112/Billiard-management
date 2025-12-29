@@ -6,7 +6,7 @@ import Leaderboard from './Leaderboard';
 import { Wallet, Trophy, Clock, ArrowUpRight } from 'lucide-react';
 
 const Dashboard = () => {
-    const { nextPayer, allStats, getExpenses, matches } = useGame();
+    const { nextPayer, allStats, getExpenses, matches, players } = useGame();
     const [timeframe, setTimeframe] = useState('month'); 
 
     const expenses = getExpenses(timeframe);
@@ -116,21 +116,39 @@ const Dashboard = () => {
                         Recent Matches
                     </h3>
                     <div className="space-y-4">
-                        {matches.slice(0, 5).map(match => (
-                            <div key={match.id} className="relative pl-6 pb-6 border-l border-white/10 last:pb-0 last:border-0">
-                                <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-[var(--color-surface)] border border-white/20" />
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <div className="font-bold text-[var(--color-text-main)]">{match.winner} <span className="text-gray-500 font-normal text-sm">beat {match.loser}</span></div>
-                                        <div className="text-xs text-gray-500 mt-1">{new Date(match.date).toLocaleDateString()}</div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="font-mono text-[var(--color-primary)]">{fmtMoney(match.cost)}</div>
-                                        <div className="text-[10px] text-gray-600 uppercase">Paid: {match.payer}</div>
+                        {matches.slice(0, 5).map(match => {
+                            let thirdPlayer = null;
+                            if (match.participants && match.participants.length > 0) {
+                                thirdPlayer = match.participants.find(p => p !== match.winner && p !== match.loser);
+                            } else {
+                                thirdPlayer = players.find(p => p !== match.winner && p !== match.loser);
+                            }
+                            return (
+                                <div key={match.id} className="relative pl-6 pb-6 border-l border-white/10 last:pb-0 last:border-0">
+                                    <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-[var(--color-surface)] border border-white/20" />
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-bold text-[var(--color-text-main)]">
+                                                {match.winner} 
+                                                <span className="text-gray-500 font-normal text-sm mx-1">vs</span> 
+                                                {match.loser}
+                                                {thirdPlayer && (
+                                                    <>
+                                                        <span className="text-gray-500 font-normal text-sm mx-1">vs</span>
+                                                        {thirdPlayer}
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">{new Date(match.date).toLocaleDateString()}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-mono text-[var(--color-primary)]">{fmtMoney(match.cost)}</div>
+                                            <div className="text-[10px] text-gray-600 uppercase">Paid: {match.payer}</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                          {matches.length === 0 && (
                             <div className="text-center py-8 text-gray-500 text-sm">No matches recorded.</div>
                         )}

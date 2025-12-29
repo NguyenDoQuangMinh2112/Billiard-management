@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ScanLine, Loader, UploadCloud, DollarSign, Trophy } from 'lucide-react';
+import { ScanLine, Loader, UploadCloud, DollarSign, Trophy, ArrowRight } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useToast } from './Toast';
 import Tesseract from 'tesseract.js';
 import ScoreBoard from './ScoreBoard';
+import WinnerScreen from './WinnerScreen';
 
 const LogMatchView = () => {
-    const { players, matches, addMatch, nextPayer } = useGame();
+    const { nextPayer, addMatch, players, matches } = useGame();
     const { success, error: showError } = useToast();
-    
     // AI Scanning States
     const [isScanning, setIsScanning] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
@@ -21,6 +21,10 @@ const LogMatchView = () => {
     
     // Live scores from ScoreBoard
     const [liveScores, setLiveScores] = useState(null);
+
+    // Winner Screen States
+    const [showWinnerScreen, setShowWinnerScreen] = useState(false);
+    const [winnerData, setWinnerData] = useState(null);
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
@@ -101,41 +105,67 @@ const LogMatchView = () => {
             return;
         }
 
-        // Calculate winner based on score differential (wins - losses)
-        let winner = null;
-        let loser = null;
-        let maxDiff = -Infinity;
-        let minDiff = Infinity;
+        // Calculate rankings for all players based on score differential (wins - losses)
+        const playerRankings = Object.entries(liveScores).map(([player, scores]) => ({
+            name: player,
+            wins: scores.wins,
+            losses: scores.losses,
+            differential: scores.wins - scores.losses
+        })).sort((a, b) => b.differential - a.differential); // Sort by differential descending
 
-        Object.entries(liveScores).forEach(([player, scores]) => {
-            const diff = scores.wins - scores.losses;
-            if (diff > maxDiff) {
-                maxDiff = diff;
-                winner = player;
-            }
-            if (diff < minDiff) {
-                minDiff = diff;
-                loser = player;
-            }
-        });
-
-        // Check if there's a clear winner
-        if (!winner || !loser || winner === loser) {
-            showError('Unable to determine winner. Scores may be tied.');
+        // Determine winner (highest differential)
+        const winner = playerRankings[0];
+        
+        // Find all losers (everyone except winner)
+        const losers = playerRankings.slice(1);
+        
+        // Check if there's a clear winner (no tie at top)
+        if (playerRankings.length > 1 && winner.differential === playerRankings[1].differential) {
+            showError('Unable to determine winner. Top players are tied.');
             return;
         }
+
+        // For backend API, we need to pick the worst loser (lowest differential)
+        const worstLoser = playerRankings[playerRankings.length - 1];
+
+        // Determine active participants (those who played)
+        const participants = playerRankings
+            .filter(p => p.wins > 0 || p.losses > 0)
+            .map(p => p.name);
 
         setIsSubmitting(true);
 
         try {
             const result = await addMatch({
-                winner,
-                loser,
-                cost: parseFloat(billCost)
+                winner: winner.name,
+                loser: worstLoser.name,
+                cost: parseFloat(billCost),
+                participants: participants.length > 0 ? participants : [winner.name, worstLoser.name]
             });
 
             if (result && result.success) {
-                success(`Match logged! ${winner} wins! 🎉`);
+                // Prepare comprehensive winner data for the celebration screen
+                setWinnerData({
+                    winner: winner.name,
+                    winnerScore: winner.wins,
+                    winnerLosses: winner.losses,
+                    winnerDifferential: winner.differential,
+                    losers: losers.map(l => ({
+                        name: l.name,
+                        wins: l.wins,
+                        losses: l.losses,
+                        differential: l.differential
+                    })),
+                    allPlayers: playerRankings,
+                    cost: parseFloat(billCost)
+                });
+                
+                // Show winner screen
+                setShowWinnerScreen(true);
+                
+                // Show success toast
+                success(`Match logged! ${winner.name} wins! 🎉`);
+                
                 // Reset form
                 setBillCost('');
                 setScanStatus('');
@@ -172,11 +202,26 @@ const LogMatchView = () => {
                     {/* Next Payer Info */}
                     <div className="p-4 bg-[var(--color-secondary)]/10 border-l-4 border-[var(--color-secondary)] rounded-r-xl flex items-center justify-between mb-6">
                         <div>
-                            <p className="text-[10px] text-[var(--color-secondary)] uppercase font-bold tracking-wider mb-1">Payer</p>
-                            <p className="text-lg font-bold flex items-center gap-2">
-                                {nextPayer}
-                                <span className="text-xs font-normal text-gray-500 bg-black/20 px-2 py-0.5 rounded-full">It's their turn</span>
+                            <p className="text-[10px] text-[var(--color-secondary)] uppercase font-bold tracking-wider mb-1">
+                                Payment Rotation
                             </p>
+                            <div className="flex items-center gap-3">
+                                {/* Previous Payer (if exists) */}
+                                {matches.length > 0 && (
+                                    <div className="flex items-center gap-2 text-gray-500 opacity-70">
+                                        <span className="font-medium text-sm">{matches[0].payer}</span>
+                                        <ArrowRight size={14} />
+                                    </div>
+                                )}
+                                
+                                {/* Current Payer (Next) */}
+                                <p className="text-lg font-bold flex items-center gap-2 text-[var(--color-text-main)]">
+                                    {nextPayer}
+                                    <span className="text-xs font-normal text-white bg-[var(--color-secondary)] px-2 py-0.5 rounded-full shadow-sm">
+                                        It's their turn
+                                    </span>
+                                </p>
+                            </div>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-[var(--color-secondary)]/20 flex items-center justify-center text-[var(--color-secondary)]">
                             <DollarSign size={20} />
@@ -282,6 +327,15 @@ const LogMatchView = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Winner Screen Modal */}
+            <WinnerScreen 
+                winner={winnerData?.winner}
+                loser={winnerData?.loser}
+                isOpen={showWinnerScreen}
+                onClose={() => setShowWinnerScreen(false)}
+                matchData={winnerData}
+            />
         </div>
     );
 };

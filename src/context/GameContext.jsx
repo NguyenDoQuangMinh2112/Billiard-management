@@ -77,13 +77,46 @@ export const GameProvider = ({ children }) => {
     }
   }, [nextPayer, players]);
 
+  // Notification History State
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const addNotification = (type, title, message, data = {}) => {
+    const newNotif = {
+      id: Date.now(),
+      type, // 'success', 'info', 'warning'
+      title,
+      message,
+      timestamp: new Date(),
+      read: false,
+      data
+    };
+    
+    setNotifications(prev => [newNotif, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
   const addMatch = async (matchData) => {
     try {
+      // Get current payer BEFORE creating match
+      const currentPayerName = nextPayer;
+
       // matchData: { winner, loser, cost }
       const response = await billiardAPI.createMatch(
         matchData.winner,
         matchData.loser,
-        matchData.cost
+        matchData.cost,
+        matchData.participants
       );
 
       if (response.success && response.data) {
@@ -93,7 +126,16 @@ export const GameProvider = ({ children }) => {
         // Update next payer info
         const payerResponse = await billiardAPI.getNextPayer();
         if (payerResponse.success && payerResponse.data) {
-          setNextPayer(payerResponse.data.nextPayer);
+          const newNextPayer = payerResponse.data.nextPayer;
+          setNextPayer(newNextPayer);
+          
+          // Add to Notification History
+          addNotification(
+            'payment',
+            'Bill Submitted',
+            `${currentPayerName} paid ${Number(matchData.cost).toLocaleString()}đ. Next up: ${newNextPayer}`,
+            { currentPayer: currentPayerName, nextPayer: newNextPayer, cost: matchData.cost }
+          );
         }
         
         return { success: true, data: response.data };
@@ -106,7 +148,6 @@ export const GameProvider = ({ children }) => {
       return { success: false, error: 'Failed to create match' };
     }
   };
-
   const deleteMatch = async (id) => {
     try {
       const response = await billiardAPI.deleteMatch(id);
@@ -187,7 +228,11 @@ export const GameProvider = ({ children }) => {
         theme,
         toggleTheme,
         loading,
-        error
+        error,
+        notifications,
+        unreadCount,
+        markAllAsRead,
+        clearNotifications
     }}>
       {children}
     </GameContext.Provider>

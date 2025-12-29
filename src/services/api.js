@@ -73,10 +73,10 @@ class BilliardAPI {
     return this.request(`/matches/recent?limit=${limit}`);
   }
 
-  async createMatch(winner, loser, cost) {
+  async createMatch(winner, loser, cost, participants = []) {
     return this.request("/matches", {
       method: "POST",
-      body: JSON.stringify({ winner, loser, cost }),
+      body: JSON.stringify({ winner, loser, cost, participants }),
     });
   }
 
