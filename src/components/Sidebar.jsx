@@ -90,7 +90,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
                 {/* Collapse Toggle */}
                 <button 
                     onClick={() => setCollapsed(!collapsed)}
-                    className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+                    className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-[var(--color-highlight)] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors"
                 >
                     {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                 </button>

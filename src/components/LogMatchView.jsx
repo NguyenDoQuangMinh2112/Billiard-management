@@ -133,6 +133,13 @@ const LogMatchView = () => {
             .filter(p => p.wins > 0 || p.losses > 0)
             .map(p => p.name);
 
+        // Prepare detailed stats
+        const details = playerRankings.map(p => ({
+            name: p.name,
+            wins: p.wins,
+            losses: p.losses
+        }));
+
         setIsSubmitting(true);
 
         try {
@@ -140,7 +147,8 @@ const LogMatchView = () => {
                 winner: winner.name,
                 loser: worstLoser.name,
                 cost: parseFloat(billCost),
-                participants: participants.length > 0 ? participants : [winner.name, worstLoser.name]
+                participants: participants.length > 0 ? participants : [winner.name, worstLoser.name],
+                details
             });
 
             if (result && result.success) {
@@ -208,7 +216,7 @@ const LogMatchView = () => {
                             <div className="flex items-center gap-3">
                                 {/* Previous Payer (if exists) */}
                                 {matches.length > 0 && (
-                                    <div className="flex items-center gap-2 text-gray-500 opacity-70">
+                                    <div className="flex items-center gap-2 text-[var(--color-text-dim)] opacity-70">
                                         <span className="font-medium text-sm">{matches[0].payer}</span>
                                         <ArrowRight size={14} />
                                     </div>
@@ -230,15 +238,15 @@ const LogMatchView = () => {
 
                     {/* Bill Cost Input */}
                     <div className="space-y-2 mb-6">
-                        <label className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Bill (VND)</label>
+                        <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider">Total Bill (VND)</label>
                         <div className="relative">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">₫</div>
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] font-bold text-lg">₫</div>
                             <input 
                                 type="number" 
                                 value={billCost}
                                 onChange={(e) => setBillCost(e.target.value)}
                                 placeholder="0"
-                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-10 text-2xl font-mono font-bold focus:border-[var(--color-accent)] outline-none transition-all placeholder:text-gray-700"
+                                className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl p-4 pl-10 text-2xl font-mono font-bold font-[var(--color-text-main)] focus:border-[var(--color-accent)] outline-none transition-all placeholder:text-[var(--color-text-dim)] text-[var(--color-text-main)]"
                             />
                             {/* Quick selection tags */}
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
@@ -247,7 +255,7 @@ const LogMatchView = () => {
                                         key={amt}
                                         type="button"
                                         onClick={() => setBillCost(amt.toString())}
-                                        className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[10px] text-gray-400 hover:text-white transition-colors"
+                                        className="px-2 py-1 bg-[var(--color-surface)] hover:bg-[var(--color-highlight)] border border-[var(--color-border)] rounded text-[10px] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors"
                                     >
                                         {(amt/1000)}k
                                     </button>
@@ -275,7 +283,7 @@ const LogMatchView = () => {
                         )}
                     </button>
                     
-                    <p className="text-xs text-gray-500 text-center mt-3">
+                    <p className="text-xs text-[var(--color-text-dim)] text-center mt-3">
                         Winner will be auto-calculated based on highest score differential (W - L)
                     </p>
                 </div>
@@ -284,7 +292,7 @@ const LogMatchView = () => {
                 <div className="glass-panel p-8 rounded-2xl">
                     <h3 className="text-lg font-bold mb-4">Bill Scanner (Optional)</h3>
                     <div className="relative group">
-                        <div className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all ${isScanning ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10'}`}>
+                        <div className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all ${isScanning ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-border)] hover:border-[var(--color-text-dim)] bg-[var(--color-surface)] hover:bg-[var(--color-highlight)]'}`}>
                             <input 
                                 type="file" 
                                 accept="image/*" 
@@ -303,12 +311,12 @@ const LogMatchView = () => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center gap-2 text-center">
-                                    <div className="p-3 rounded-full bg-white/5 group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors">
+                                    <div className="p-3 rounded-full bg-[var(--color-background)] group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors">
                                         <ScanLine size={24} />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-sm">AI Bill Scanner</p>
-                                        <p className="text-xs text-gray-400">Upload receipt image to auto-fill bill amount</p>
+                                        <p className="font-bold text-sm text-[var(--color-text-main)]">AI Bill Scanner</p>
+                                        <p className="text-xs text-[var(--color-text-dim)]">Upload receipt image to auto-fill bill amount</p>
                                     </div>
                                 </div>
                             )}
