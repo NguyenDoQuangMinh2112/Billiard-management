@@ -91,8 +91,10 @@ class BilliardAPI {
   }
 
   // ============ Statistics ============
-  async getStats() {
-    return this.request("/stats");
+  async getStats(params = {}) {
+    const query = new URLSearchParams();
+    if (params.timeframe) query.append('timeframe', params.timeframe);
+    return this.request(`/stats?${query.toString()}`);
   }
 
   async getPlayerStats(id) {
