@@ -1,11 +1,8 @@
 // API Integration Helper for Billiard Management Frontend
 // This file connects the React frontend to the backend API
 
-// const API_BASE_URL = import.meta.env.MODE === 'production'
-//     ? 'limited-elana-123minh-53a2b636.koyeb.app/api'
-//     : 'http://localhost:3000/api';
-
-const API_BASE_URL = 'limited-elana-123minh-53a2b636.koyeb.app/api'
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 // API Response Type (for documentation purposes in JS)
 // interface ApiResponse<T> {
@@ -17,97 +14,100 @@ const API_BASE_URL = 'limited-elana-123minh-53a2b636.koyeb.app/api'
 
 // API Client Class
 class BilliardAPI {
-    constructor(baseUrl = API_BASE_URL) {
-        this.baseUrl = baseUrl;
-    }
+  constructor(baseUrl = API_BASE_URL) {
+    this.baseUrl = baseUrl;
+  }
 
-    async request(endpoint, options = {}) {
-        try {
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
-                ...options,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers,
-                },
-            });
+  async request(endpoint, options = {}) {
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
 
-            const data = await response.json();
-            
-            // Check if response was successful
-            if (!response.ok) {
-                throw new Error(data.error || data.message || 'Request failed');
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('API Error:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error occurred',
-            };
-        }
-    }
+      const data = await response.json();
 
-    // ============ Players ============
-    async getPlayers() {
-        return this.request('/players');
-    }
+      // Check if response was successful
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Request failed");
+      }
 
-    async createPlayer(name) {
-        return this.request('/players', {
-            method: 'POST',
-            body: JSON.stringify({ name }),
-        });
+      return data;
+    } catch (error) {
+      console.error("API Error:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
     }
+  }
 
-    async deletePlayer(id) {
-        return this.request(`/players/${id}`, {
-            method: 'DELETE',
-        });
-    }
+  // ============ Players ============
+  async getPlayers() {
+    return this.request("/players");
+  }
 
-    // ============ Matches ============
-    async getMatches() {
-        return this.request('/matches');
-    }
+  async createPlayer(name) {
+    return this.request("/players", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+  }
 
-    async getRecentMatches(limit = 10) {
-        return this.request(`/matches/recent?limit=${limit}`);
-    }
+  async deletePlayer(id) {
+    return this.request(`/players/${id}`, {
+      method: "DELETE",
+    });
+  }
 
-    async createMatch(winner, loser, cost) {
-        return this.request('/matches', {
-            method: 'POST',
-            body: JSON.stringify({ winner, loser, cost }),
-        });
-    }
+  // ============ Matches ============
+  async getMatches() {
+    return this.request("/matches");
+  }
 
-    async deleteMatch(id) {
-        return this.request(`/matches/${id}`, {
-            method: 'DELETE',
-        });
-    }
+  async getRecentMatches(limit = 10) {
+    return this.request(`/matches/recent?limit=${limit}`);
+  }
 
-    async getNextPayer() {
-        return this.request('/matches/payer/next');
-    }
+  async createMatch(winner, loser, cost, participants = [], details = []) {
+    return this.request("/matches", {
+      method: "POST",
+      body: JSON.stringify({ winner, loser, cost, participants, details }),
+    });
+  }
 
-    // ============ Statistics ============
-    async getStats() {
-        return this.request('/stats');
-    }
+  async deleteMatch(id) {
+    return this.request(`/matches/${id}`, {
+      method: "DELETE",
+    });
+  }
 
-    async getPlayerStats(id) {
-        return this.request(`/stats/player/${id}`);
-    }
+  async getNextPayer() {
+    return this.request("/matches/payer/next");
+  }
 
-    async getExpenses(timeframe = 'month') {
-        return this.request(`/stats/expenses?timeframe=${timeframe}`);
-    }
+  // ============ Statistics ============
+  async getStats(params = {}) {
+    const query = new URLSearchParams();
+    if (params.timeframe) query.append('timeframe', params.timeframe);
+    return this.request(`/stats?${query.toString()}`);
+  }
 
-    async getLeaderboard(limit = 10) {
-        return this.request(`/stats/leaderboard?limit=${limit}`);
-    }
+  async getPlayerStats(id) {
+    return this.request(`/stats/player/${id}`);
+  }
+
+  async getExpenses(timeframe = "month") {
+    return this.request(`/stats/expenses?timeframe=${timeframe}`);
+  }
+
+  async getLeaderboard(limit = 10) {
+    return this.request(`/stats/leaderboard?limit=${limit}`);
+  }
 }
 
 // Export singleton instance

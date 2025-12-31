@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
-import MatchLogger from './MatchLogger';
 import StatsCharts from './StatsCharts';
 import Leaderboard from './Leaderboard';
-import { Plus, Wallet, Trophy, Clock, ArrowUpRight } from 'lucide-react';
+import { Wallet, Trophy, Clock, ArrowUpRight } from 'lucide-react';
 
 const Dashboard = () => {
-    const { nextPayer, allStats, getExpenses, matches } = useGame();
-    const [isLoggerOpen, setIsLoggerOpen] = useState(false);
+    const { nextPayer, allStats, getExpenses, matches, players } = useGame();
     const [timeframe, setTimeframe] = useState('month'); 
 
     const expenses = getExpenses(timeframe);
@@ -20,7 +18,7 @@ const Dashboard = () => {
     const topPlayer = allStats[0];
 
     return (
-        <div className="container mx-auto px-6 py-8">
+        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
             
             {/* Header / Actions */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -28,25 +26,16 @@ const Dashboard = () => {
                     <h1 className="text-3xl font-display font-bold">Overview</h1>
                     <p className="text-[var(--color-text-dim)]">Welcome back to the arena.</p>
                 </div>
-                <div className="flex gap-4">
-                    <div className="flex bg-black/20 rounded-lg p-1 border border-white/5">
-                        {['week', 'month', 'year'].map(t => (
-                            <button 
-                                key={t}
-                                onClick={() => setTimeframe(t)}
-                                className={`px-4 py-2 text-sm font-bold rounded-md capitalize transition-all ${timeframe === t ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] shadow ring-1 ring-white/10' : 'text-gray-500 hover:text-gray-300'}`}
-                            >
-                                {t}
-                            </button>
-                        ))}
-                    </div>
-                    <button 
-                        onClick={() => setIsLoggerOpen(true)}
-                        className="bg-[var(--color-primary)] text-black px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[var(--color-accent)] transition-all shadow-lg shadow-[var(--color-primary)]/20"
-                    >
-                        <Plus size={20} />
-                        Log Match
-                    </button>
+                <div className="flex bg-[var(--color-surface)] rounded-lg p-1 border border-[var(--color-border)]">
+                    {['week', 'month', 'year'].map(t => (
+                        <button 
+                            key={t}
+                            onClick={() => setTimeframe(t)}
+                            className={`px-4 py-2 text-sm font-bold rounded-md capitalize transition-all ${timeframe === t ? 'bg-[var(--color-background)] text-[var(--color-text-main)] shadow ring-1 ring-[var(--color-border)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-main)]'}`}
+                        >
+                            {t}
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -85,7 +74,7 @@ const Dashboard = () => {
                         <h3 className="text-[var(--color-text-dim)] text-sm font-medium uppercase tracking-wider mb-1">Top Player</h3>
                         <div className="text-4xl font-display font-bold text-[var(--color-text-main)] flex items-end gap-2">
                             {topPlayer?.name || '-'}
-                            <span className="text-lg text-gray-500 font-sans font-normal mb-1">{topPlayer?.wins || 0} Wins</span>
+                            <span className="text-lg text-[var(--color-text-dim)] font-sans font-normal mb-1">{topPlayer?.wins || 0} Wins</span>
                         </div>
                     </div>
                 </div>
@@ -127,29 +116,45 @@ const Dashboard = () => {
                         Recent Matches
                     </h3>
                     <div className="space-y-4">
-                        {matches.slice(0, 5).map(match => (
-                            <div key={match.id} className="relative pl-6 pb-6 border-l border-white/10 last:pb-0 last:border-0">
-                                <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-[var(--color-surface)] border border-white/20" />
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <div className="font-bold text-[var(--color-text-main)]">{match.winner} <span className="text-gray-500 font-normal text-sm">beat {match.loser}</span></div>
-                                        <div className="text-xs text-gray-500 mt-1">{new Date(match.date).toLocaleDateString()}</div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="font-mono text-[var(--color-primary)]">{fmtMoney(match.cost)}</div>
-                                        <div className="text-[10px] text-gray-600 uppercase">Paid: {match.payer}</div>
+                        {matches.slice(0, 5).map(match => {
+                            let thirdPlayer = null;
+                            if (match.participants && match.participants.length > 0) {
+                                thirdPlayer = match.participants.find(p => p !== match.winner && p !== match.loser);
+                            } else {
+                                thirdPlayer = players.find(p => p !== match.winner && p !== match.loser);
+                            }
+                            return (
+                                <div key={match.id} className="relative pl-6 pb-6 border-l border-[var(--color-border)] last:pb-0 last:border-0">
+                                    <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]" />
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-bold text-[var(--color-text-main)]">
+                                                {match.winner} 
+                                                <span className="text-[var(--color-text-dim)] font-normal text-sm mx-1">vs</span> 
+                                                {match.loser}
+                                                {thirdPlayer && (
+                                                    <>
+                                                        <span className="text-[var(--color-text-dim)] font-normal text-sm mx-1">vs</span>
+                                                        {thirdPlayer}
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-[var(--color-text-dim)] mt-1">{new Date(match.date).toLocaleDateString()}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-mono text-[var(--color-primary)]">{fmtMoney(match.cost)}</div>
+                                            <div className="text-[10px] text-[var(--color-text-dim)] uppercase">Paid: {match.payer}</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                          {matches.length === 0 && (
-                            <div className="text-center py-8 text-gray-500 text-sm">No matches recorded.</div>
+                            <div className="text-center py-8 text-[var(--color-text-dim)] text-sm">No matches recorded.</div>
                         )}
                     </div>
                 </div>
             </div>
-
-            <MatchLogger isOpen={isLoggerOpen} onClose={() => setIsLoggerOpen(false)} />
         </div>
     );
 };

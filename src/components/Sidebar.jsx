@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Trophy, History, Settings, LogOut, ChevronRight, ChevronLeft, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Trophy, History, Settings, LogOut, ChevronRight, ChevronLeft, Sun, Moon, Plus } from 'lucide-react';
 
 const Sidebar = ({ activeTab, onTabChange }) => {
-    const { theme, toggleTheme } = useGame();
+    const { theme, toggleTheme, nextPayer } = useGame();
     const [collapsed, setCollapsed] = useState(false);
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'logmatch', label: 'Log Match', icon: Plus },
         { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
         { id: 'history', label: 'Match History', icon: History },
         { id: 'settings', label: 'Settings', icon: Settings },
@@ -17,7 +18,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     return (
         <motion.div 
             animate={{ width: collapsed ? 80 : 250 }}
-            className="h-screen bg-[var(--color-surface)] border-r border-white/5 flex flex-col sticky top-0 z-40 transition-all"
+            className="hidden md:flex h-screen bg-[var(--color-surface)] border-r border-[var(--color-border,rgba(255,255,255,0.05))] flex-col sticky top-0 z-40 transition-all shadow-sm"
         >
             {/* Logo Area */}
             <div className="p-6 flex items-center gap-3 overflow-hidden">
@@ -71,7 +72,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
             </nav>
 
             {/* Footer Area */}
-            <div className="p-4 border-t border-white/5 space-y-2">
+            <div className="p-4 border-t border-[var(--color-border,rgba(255,255,255,0.05))] space-y-2">
                 {/* Theme Toggle */}
                 <button
                     onClick={toggleTheme}
@@ -89,7 +90,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
                 {/* Collapse Toggle */}
                 <button 
                     onClick={() => setCollapsed(!collapsed)}
-                    className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+                    className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-[var(--color-highlight)] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors"
                 >
                     {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                 </button>

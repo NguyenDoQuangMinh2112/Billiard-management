@@ -16,7 +16,7 @@ const SettingsView = () => {
     };
 
     return (
-        <div className="container mx-auto px-6 py-8 md:max-w-2xl">
+        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 md:max-w-2xl">
             <h1 className="text-3xl font-display font-bold mb-8">Settings</h1>
 
             {/* Player Management Section */}

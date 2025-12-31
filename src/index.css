@@ -24,16 +24,63 @@
 
 /* Light Mode Overrides */
 .light-mode {
-    --color-primary: #007780;
-    /* Darker Cyan for visibility on white */
-    --color-secondary: #5000a0;
-    --color-accent: #158000;
+    /* Enhanced color palette for better visibility and aesthetics */
+    --color-primary: #0891b2;
+    /* Vibrant Cyan - WCAG AA compliant */
+    --color-secondary: #7c3aed;
+    /* Rich Purple - better contrast */
+    --color-accent: #059669;
+    /* Emerald Green - professional and vibrant */
 
-    --color-background: #f3f4f6;
+    /* Background and surface colors */
+    --color-background: #f8fafc;
+    /* Softer white with slight blue tint */
     --color-surface: #ffffff;
-    --color-text-main: #111827;
-    --color-text-dim: #4b5563;
-    --color-highlight: rgba(0, 0, 0, 0.05);
+    /* Pure white for cards */
+
+    /* Text colors with improved contrast */
+    --color-text-main: #0f172a;
+    /* Slate 900 - excellent readability */
+    --color-text-dim: #64748b;
+    /* Slate 500 - clear secondary text */
+
+    /* Highlight and interaction states */
+    --color-highlight: rgba(15, 23, 42, 0.04);
+    /* Subtle slate highlight */
+    --color-border: rgba(15, 23, 42, 0.12);
+    /* Defined borders for light mode */
+    --color-shadow: rgba(15, 23, 42, 0.08);
+    /* Soft shadows */
+
+    /* Additional light mode specific colors */
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-warning: #f59e0b;
+    --color-info: #3b82f6;
+}
+
+/* Light mode specific component styles */
+.light-mode input,
+.light-mode textarea,
+.light-mode select {
+    background-color: #ffffff;
+    border-color: var(--color-border);
+    color: var(--color-text-main);
+}
+
+.light-mode input:focus,
+.light-mode textarea:focus,
+.light-mode select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+.light-mode button:not(.glass-panel) {
+    box-shadow: 0 1px 3px 0 var(--color-shadow);
+}
+
+.light-mode button:hover:not(.glass-panel) {
+    box-shadow: 0 4px 6px -1px var(--color-shadow);
 }
 
 @keyframes float {
@@ -91,17 +138,21 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: background 0.3s ease, border-color 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .light-mode .glass-panel {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border, rgba(15, 23, 42, 0.12));
+    box-shadow: 0 4px 6px -1px var(--color-shadow, rgba(15, 23, 42, 0.08)),
+        0 2px 4px -2px var(--color-shadow, rgba(15, 23, 42, 0.05));
 }
 
 .text-gradient {
     background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }

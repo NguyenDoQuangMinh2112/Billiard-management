@@ -26,6 +26,7 @@ export const GameProvider = ({ children }) => {
   // Initialize with default pool players
   const [players, setPlayers] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [stats, setStats] = useState([]); // Store server stats
   const [payerIndex, setPayerIndex] = useState(0);
   const [nextPayer, setNextPayer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,10 +50,16 @@ export const GameProvider = ({ children }) => {
           setMatches(matchesResponse.data);
         }
 
+        // Fetch stats (This is the source of truth for Leaderboard)
+        const statsResponse = await billiardAPI.getStats();
+        if (statsResponse.success && statsResponse.data) {
+           setStats(statsResponse.data);
+        }
+
         // Fetch next payer
         const payerResponse = await billiardAPI.getNextPayer();
         if (payerResponse.success && payerResponse.data) {
-          setNextPayer(payerResponse.data.nextPayer);
+          setNextPayer(payerResponse.data.name);
         }
 
         setError(null);
@@ -67,6 +74,16 @@ export const GameProvider = ({ children }) => {
     fetchData();
   }, []); // Run once on mount
 
+  // Helper to refresh stats
+  const refreshStats = async () => {
+      try {
+        const statsResponse = await billiardAPI.getStats();
+        if (statsResponse.success && statsResponse.data) {
+           setStats(statsResponse.data);
+        }
+      } catch (e) { console.error("Failed to refresh stats", e); }
+  };
+
   // Update payerIndex when players or nextPayer changes
   useEffect(() => {
     if (nextPayer && players.length > 0) {
@@ -77,13 +94,50 @@ export const GameProvider = ({ children }) => {
     }
   }, [nextPayer, players]);
 
+  // ... (Notification logic unchanged)
+
+  // Notification History State
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const addNotification = (type, title, message, data = {}) => {
+    // ... (unchanged)
+    const newNotif = {
+      id: Date.now(),
+      type, // 'success', 'info', 'warning'
+      title,
+      message,
+      timestamp: new Date(),
+      read: false,
+      data
+    };
+    
+    setNotifications(prev => [newNotif, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  };
+  
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
   const addMatch = async (matchData) => {
     try {
-      // matchData: { winner, loser, cost }
+      // Get current payer BEFORE creating match
+      const currentPayerName = nextPayer;
+
+      // matchData: { winner, loser, cost, participants, details }
       const response = await billiardAPI.createMatch(
         matchData.winner,
         matchData.loser,
-        matchData.cost
+        matchData.cost,
+        matchData.participants,
+        matchData.details
       );
 
       if (response.success && response.data) {
@@ -93,8 +147,20 @@ export const GameProvider = ({ children }) => {
         // Update next payer info
         const payerResponse = await billiardAPI.getNextPayer();
         if (payerResponse.success && payerResponse.data) {
-          setNextPayer(payerResponse.data.nextPayer);
+          const newNextPayer = payerResponse.data.name;
+          setNextPayer(newNextPayer);
+          
+          // Add to Notification History
+          addNotification(
+            'payment',
+            'Bill Submitted',
+            `${currentPayerName} paid ${Number(matchData.cost).toLocaleString()}đ. Next up: ${newNextPayer}`,
+            { currentPayer: currentPayerName, nextPayer: newNextPayer, cost: matchData.cost }
+          );
         }
+        
+        // IMPORTANT: Refresh Stats from Backend
+        await refreshStats();
         
         return { success: true, data: response.data };
       } else {
@@ -106,7 +172,6 @@ export const GameProvider = ({ children }) => {
       return { success: false, error: 'Failed to create match' };
     }
   };
-
   const deleteMatch = async (id) => {
     try {
       const response = await billiardAPI.deleteMatch(id);
@@ -120,6 +185,9 @@ export const GameProvider = ({ children }) => {
         if (payerResponse.success && payerResponse.data) {
           setNextPayer(payerResponse.data.nextPayer);
         }
+
+        // Refresh Stats
+        await refreshStats();
         
         return { success: true };
       } else {
@@ -132,22 +200,14 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  // Deprecated: calculated locally. Now we use 'stats' from server.
+  // We can keep this function if we want to fallback, but let's point allStats to 'stats'
   const getStats = () => {
-    const stats = players.map(name => ({
-        name,
-        wins: matches.filter(m => m.winner === name).length,
-        losses: matches.filter(m => m.loser === name).length,
-        totalSpent: matches.filter(m => m.payer === name).reduce((sum, m) => sum + Number(m.cost), 0),
-        matchesPlayed: matches.filter(m => m.winner === name || m.loser === name).length
-    }));
-
-    // Sort by Wins (desc)
-    return stats.sort((a, b) => b.wins - a.wins);
+    return stats;
   };
 
   const getExpenses = (timeframe = 'month') => {
-    // Simple aggregator for now
-    // In a real app we'd use date-fns to group by week/month/year
+    // ... (unchanged)
     const now = new Date();
     
     return matches.reduce((acc, m) => {
@@ -155,7 +215,6 @@ export const GameProvider = ({ children }) => {
         
         let include = false;
         if (timeframe === 'week') {
-            // Simple "Same Week" logic (ISO week would be better but this works for simple "this week")
             const oneDay = 24 * 60 * 60 * 1000;
             const diffDays = Math.round(Math.abs((now - d) / oneDay));
             include = diffDays <= 7; 
@@ -172,7 +231,7 @@ export const GameProvider = ({ children }) => {
     }, { total: 0, byPlayer: {} });
   };
 
-  const allStats = getStats();
+  const allStats = stats; // Use server stats instead of getStats() calculation
 
   return (
     <GameContext.Provider value={{
@@ -187,7 +246,11 @@ export const GameProvider = ({ children }) => {
         theme,
         toggleTheme,
         loading,
-        error
+        error,
+        notifications,
+        unreadCount,
+        markAllAsRead,
+        clearNotifications
     }}>
       {children}
     </GameContext.Provider>
