@@ -49,12 +49,16 @@ const HistoryView = () => {
                         </motion.div>
                     ) : (
                         matches.map((match, index) => {
+                            // Support both old and new winner formats
+                            const winners = Array.isArray(match.winners) ? match.winners : (match.winner ? [match.winner] : []);
+                            const isDraw = winners.length > 1;
+
                             // Find the third player who is neither winner nor loser
                             let thirdPlayer = null;
                             if (match.participants && match.participants.length > 0) {
-                                thirdPlayer = match.participants.find(p => p !== match.winner && p !== match.loser);
+                                thirdPlayer = match.participants.find(p => !winners.includes(p) && p !== match.loser);
                             } else {
-                                thirdPlayer = players.find(p => p !== match.winner && p !== match.loser);
+                                thirdPlayer = players.find(p => !winners.includes(p) && p !== match.loser);
                             }
 
                             return (
@@ -97,19 +101,25 @@ const HistoryView = () => {
                                                 <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8">
                                                     
                                                     {/* Winner Side */}
-                                                    <div className="flex items-center gap-3 relative">
-                                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 p-[2px] shadow-lg shadow-green-900/50">
-                                                            <div className="w-full h-full rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
-                                                                <Trophy size={20} className="text-green-200" />
+                                                    <div className="flex flex-col gap-3">
+                                                        {winners.map((winnerName, idx) => (
+                                                            <div key={idx} className="flex items-center gap-3 relative">
+                                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 p-[2px] shadow-lg shadow-green-900/50">
+                                                                    <div className="w-full h-full rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                                                                        <Trophy size={20} className="text-green-200" />
+                                                                    </div>
+                                                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-black z-10">
+                                                                        <span className="text-[10px] font-bold text-black">W</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-lg font-bold text-white leading-tight">{winnerName}</div>
+                                                                    <div className="text-xs text-green-400 font-bold uppercase tracking-wider">
+                                                                        {isDraw ? 'Draw' : 'Winner'}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-black z-10">
-                                                                <span className="text-[10px] font-bold text-black">W</span>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-lg font-bold text-white leading-tight">{match.winner}</div>
-                                                            <div className="text-xs text-green-400 font-bold uppercase tracking-wider">Winner</div>
-                                                        </div>
+                                                        ))}
                                                     </div>
 
                                                     {/* VS Divider */}

@@ -113,18 +113,13 @@ const LogMatchView = () => {
             differential: scores.wins - scores.losses
         })).sort((a, b) => b.differential - a.differential); // Sort by differential descending
 
-        // Determine winner (highest differential)
-        const winner = playerRankings[0];
+        // Identify all winners (all players with the highest differential)
+        const highestDifferential = playerRankings[0].differential;
+        const winners = playerRankings.filter(p => p.differential === highestDifferential);
         
-        // Find all losers (everyone except winner)
-        const losers = playerRankings.slice(1);
+        // Find all losers (everyone except winners)
+        const losers = playerRankings.filter(p => p.differential !== highestDifferential);
         
-        // Check if there's a clear winner (no tie at top)
-        if (playerRankings.length > 1 && winner.differential === playerRankings[1].differential) {
-            showError('Unable to determine winner. Top players are tied.');
-            return;
-        }
-
         // For backend API, we need to pick the worst loser (lowest differential)
         const worstLoser = playerRankings[playerRankings.length - 1];
 
@@ -143,21 +138,21 @@ const LogMatchView = () => {
         setIsSubmitting(true);
 
         try {
+            // Send all winners (supports draws/ties)
             const result = await addMatch({
-                winner: winner.name,
+                winners: winners.map(w => w.name), // Array of winner names
                 loser: worstLoser.name,
                 cost: parseFloat(billCost),
-                participants: participants.length > 0 ? participants : [winner.name, worstLoser.name],
+                participants: participants.length > 0 ? participants : [...winners.map(w => w.name), worstLoser.name],
                 details
             });
 
             if (result && result.success) {
                 // Prepare comprehensive winner data for the celebration screen
+                const matchType = winners.length > 1 ? 'draw' : 'win';
                 setWinnerData({
-                    winner: winner.name,
-                    winnerScore: winner.wins,
-                    winnerLosses: winner.losses,
-                    winnerDifferential: winner.differential,
+                    winners: winners.map(w => w.name), // Multiple winners for draws
+                    winnerScores: winners.map(w => ({ name: w.name, wins: w.wins, losses: w.losses, differential: w.differential })),
                     losers: losers.map(l => ({
                         name: l.name,
                         wins: l.wins,
@@ -165,14 +160,19 @@ const LogMatchView = () => {
                         differential: l.differential
                     })),
                     allPlayers: playerRankings,
-                    cost: parseFloat(billCost)
+                    cost: parseFloat(billCost),
+                    matchType
                 });
                 
                 // Show winner screen
                 setShowWinnerScreen(true);
                 
                 // Show success toast
-                success(`Match logged! ${winner.name} wins! 🎉`);
+                if (winners.length > 1) {
+                    success(`Match logged! Draw between ${winners.map(w => w.name).join(', ')}! 🤝`);
+                } else {
+                    success(`Match logged! ${winners[0].name} wins! 🎉`);
+                }
                 
                 // Reset form
                 setBillCost('');

@@ -1,28 +1,11 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { billiardAPI } from '../services/api';
+import { createContext, useContext, useState, useEffect } from "react";
+import { billiardAPI } from "../services/api";
 
 const GameContext = createContext();
 
 export const useGame = () => useContext(GameContext);
 
 export const GameProvider = ({ children }) => {
-  // Theme State
-  const [theme, setTheme] = useState(() => localStorage.getItem('pool_theme') || 'dark');
-
-  // Update Body Class on Theme Change
-  useEffect(() => {
-      if (theme === 'light') {
-          document.body.classList.add('light-mode');
-      } else {
-          document.body.classList.remove('light-mode');
-      }
-      localStorage.setItem('pool_theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-      setTheme(curr => curr === 'dark' ? 'light' : 'dark');
-  };
-
   // Initialize with default pool players
   const [players, setPlayers] = useState([]);
   const [matches, setMatches] = useState([]);
@@ -37,11 +20,11 @@ export const GameProvider = ({ children }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch players
         const playersResponse = await billiardAPI.getPlayers();
         if (playersResponse.success && playersResponse.data) {
-          setPlayers(playersResponse.data.map(p => p.name));
+          setPlayers(playersResponse.data.map((p) => p.name));
         }
 
         // Fetch recent matches
@@ -53,7 +36,7 @@ export const GameProvider = ({ children }) => {
         // Fetch stats (This is the source of truth for Leaderboard)
         const statsResponse = await billiardAPI.getStats();
         if (statsResponse.success && statsResponse.data) {
-           setStats(statsResponse.data);
+          setStats(statsResponse.data);
         }
 
         // Fetch next payer
@@ -64,8 +47,8 @@ export const GameProvider = ({ children }) => {
 
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Failed to load data from server');
+        console.error("Failed to fetch data:", err);
+        setError("Failed to load data from server");
       } finally {
         setLoading(false);
       }
@@ -76,12 +59,14 @@ export const GameProvider = ({ children }) => {
 
   // Helper to refresh stats
   const refreshStats = async () => {
-      try {
-        const statsResponse = await billiardAPI.getStats();
-        if (statsResponse.success && statsResponse.data) {
-           setStats(statsResponse.data);
-        }
-      } catch (e) { console.error("Failed to refresh stats", e); }
+    try {
+      const statsResponse = await billiardAPI.getStats();
+      if (statsResponse.success && statsResponse.data) {
+        setStats(statsResponse.data);
+      }
+    } catch (e) {
+      console.error("Failed to refresh stats", e);
+    }
   };
 
   // Update payerIndex when players or nextPayer changes
@@ -109,15 +94,15 @@ export const GameProvider = ({ children }) => {
       message,
       timestamp: new Date(),
       read: false,
-      data
+      data,
     };
-    
-    setNotifications(prev => [newNotif, ...prev]);
-    setUnreadCount(prev => prev + 1);
+
+    setNotifications((prev) => [newNotif, ...prev]);
+    setUnreadCount((prev) => prev + 1);
   };
-  
+
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
   };
 
@@ -131,9 +116,9 @@ export const GameProvider = ({ children }) => {
       // Get current payer BEFORE creating match
       const currentPayerName = nextPayer;
 
-      // matchData: { winner, loser, cost, participants, details }
+      // matchData: { winners, loser, cost, participants, details }
       const response = await billiardAPI.createMatch(
-        matchData.winner,
+        matchData.winners, // Changed from matchData.winner to matchData.winners
         matchData.loser,
         matchData.cost,
         matchData.participants,
@@ -143,43 +128,52 @@ export const GameProvider = ({ children }) => {
       if (response.success && response.data) {
         // Add the new match to local state
         setMatches([response.data, ...matches]);
-        
+
         // Update next payer info
         const payerResponse = await billiardAPI.getNextPayer();
         if (payerResponse.success && payerResponse.data) {
           const newNextPayer = payerResponse.data.name;
           setNextPayer(newNextPayer);
-          
+
           // Add to Notification History
           addNotification(
-            'payment',
-            'Bill Submitted',
-            `${currentPayerName} paid ${Number(matchData.cost).toLocaleString()}đ. Next up: ${newNextPayer}`,
-            { currentPayer: currentPayerName, nextPayer: newNextPayer, cost: matchData.cost }
+            "payment",
+            "Bill Submitted",
+            `${currentPayerName} paid ${Number(
+              matchData.cost
+            ).toLocaleString()}đ. Next up: ${newNextPayer}`,
+            {
+              currentPayer: currentPayerName,
+              nextPayer: newNextPayer,
+              cost: matchData.cost,
+            }
           );
         }
-        
+
         // IMPORTANT: Refresh Stats from Backend
         await refreshStats();
-        
+
         return { success: true, data: response.data };
       } else {
-        console.error('Failed to create match:', response.error);
-        return { success: false, error: response.error || 'Failed to create match' };
+        console.error("Failed to create match:", response.error);
+        return {
+          success: false,
+          error: response.error || "Failed to create match",
+        };
       }
     } catch (error) {
-      console.error('Error creating match:', error);
-      return { success: false, error: 'Failed to create match' };
+      console.error("Error creating match:", error);
+      return { success: false, error: "Failed to create match" };
     }
   };
   const deleteMatch = async (id) => {
     try {
       const response = await billiardAPI.deleteMatch(id);
-      
+
       if (response.success) {
         // Remove match from local state
-        setMatches(matches.filter(m => m.id !== id));
-        
+        setMatches(matches.filter((m) => m.id !== id));
+
         // Refresh next payer info
         const payerResponse = await billiardAPI.getNextPayer();
         if (payerResponse.success && payerResponse.data) {
@@ -188,15 +182,18 @@ export const GameProvider = ({ children }) => {
 
         // Refresh Stats
         await refreshStats();
-        
+
         return { success: true };
       } else {
-        console.error('Failed to delete match:', response.error);
-        return { success: false, error: response.error || 'Failed to delete match' };
+        console.error("Failed to delete match:", response.error);
+        return {
+          success: false,
+          error: response.error || "Failed to delete match",
+        };
       }
     } catch (error) {
-      console.error('Error deleting match:', error);
-      return { success: false, error: 'Failed to delete match' };
+      console.error("Error deleting match:", error);
+      return { success: false, error: "Failed to delete match" };
     }
   };
 
@@ -206,35 +203,43 @@ export const GameProvider = ({ children }) => {
     return stats;
   };
 
-  const getExpenses = (timeframe = 'month') => {
+  const getExpenses = (timeframe = "month") => {
     // ... (unchanged)
     const now = new Date();
-    
-    return matches.reduce((acc, m) => {
+
+    return matches.reduce(
+      (acc, m) => {
         const d = new Date(m.date);
-        
+
         let include = false;
-        if (timeframe === 'week') {
-            const oneDay = 24 * 60 * 60 * 1000;
-            const diffDays = Math.round(Math.abs((now - d) / oneDay));
-            include = diffDays <= 7; 
+        if (timeframe === "week") {
+          const oneDay = 24 * 60 * 60 * 1000;
+          const diffDays = Math.round(Math.abs((now - d) / oneDay));
+          include = diffDays <= 7;
         }
-        if (timeframe === 'month') include = d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        if (timeframe === 'year') include = d.getFullYear() === now.getFullYear();
-        if (timeframe === 'all') include = true;
+        if (timeframe === "month")
+          include =
+            d.getMonth() === now.getMonth() &&
+            d.getFullYear() === now.getFullYear();
+        if (timeframe === "year")
+          include = d.getFullYear() === now.getFullYear();
+        if (timeframe === "all") include = true;
 
         if (include) {
-            acc.total += Number(m.cost);
-            acc.byPlayer[m.payer] = (acc.byPlayer[m.payer] || 0) + Number(m.cost);
+          acc.total += Number(m.cost);
+          acc.byPlayer[m.payer] = (acc.byPlayer[m.payer] || 0) + Number(m.cost);
         }
         return acc;
-    }, { total: 0, byPlayer: {} });
+      },
+      { total: 0, byPlayer: {} }
+    );
   };
 
   const allStats = stats; // Use server stats instead of getStats() calculation
 
   return (
-    <GameContext.Provider value={{
+    <GameContext.Provider
+      value={{
         players,
         matches,
         payerIndex,
@@ -243,15 +248,14 @@ export const GameProvider = ({ children }) => {
         addMatch,
         deleteMatch,
         getExpenses,
-        theme,
-        toggleTheme,
         loading,
         error,
         notifications,
         unreadCount,
         markAllAsRead,
-        clearNotifications
-    }}>
+        clearNotifications,
+      }}
+    >
       {children}
     </GameContext.Provider>
   );

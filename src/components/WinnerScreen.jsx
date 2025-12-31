@@ -21,7 +21,11 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
     }
   }, [isOpen]);
 
-  if (!winner) return null;
+  // Support both old (single winner) and new (multiple winners) formats
+  const winners = matchData?.winners || (winner ? [winner] : []);
+  const isDraw = winners.length > 1;
+
+  if (!winners || winners.length === 0) return null;
 
   return (
     <AnimatePresence>
@@ -160,7 +164,7 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
                     className="space-y-2"
                   >
                     <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--color-primary)]">
-                      🎉 Victory! 🎉
+                      {isDraw ? '🤝 Draw! 🤝' : '🎉 Victory! 🎉'}
                     </h2>
                     <motion.h1
                       initial={{ scale: 0.8 }}
@@ -172,14 +176,14 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
                       }}
                       className="text-5xl font-display font-bold text-white drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]"
                     >
-                      {winner}
+                      {isDraw ? winners.join(' & ') : winners[0]}
                     </motion.h1>
                     <p className="text-lg text-gray-300 font-semibold">
-                      Wins the Match!
+                      {isDraw ? 'Tied for Victory!' : 'Wins the Match!'}
                     </p>
                   </motion.div>
 
-                  {/* Match Results - Winner and All Losers */}
+                  {/* Match Results - Winners and Losers */}
                   {matchData && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -187,28 +191,59 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
                       transition={{ delay: 0.7 }}
                       className="w-full space-y-3"
                     >
-                      {/* Winner Card */}
-                      <div className="bg-gradient-to-r from-[var(--color-accent)]/20 to-[var(--color-primary)]/20 backdrop-blur-sm rounded-xl p-4 border-2 border-[var(--color-accent)]/50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[var(--color-accent)] flex items-center justify-center">
-                              <Trophy size={20} className="text-black" />
+                      {/* Winners Card(s) */}
+                      <div className="space-y-2">
+                        {isDraw && matchData.winnerScores ? (
+                          // Multiple winners - show all
+                          matchData.winnerScores.map((winnerData, index) => (
+                            <div key={winnerData.name} className="bg-gradient-to-r from-[var(--color-accent)]/20 to-[var(--color-primary)]/20 backdrop-blur-sm rounded-xl p-4 border-2 border-[var(--color-accent)]/50">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-[var(--color-accent)] flex items-center justify-center">
+                                    <Trophy size={20} className="text-black" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-[var(--color-accent)] uppercase font-bold tracking-wider">🏆 Winner {index + 1}</p>
+                                    <p className="text-white font-bold text-lg">{winnerData.name}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-400">Score</p>
+                                  <p className="text-2xl font-bold text-[var(--color-accent)]">
+                                    {winnerData.wins}W - {winnerData.losses}L
+                                  </p>
+                                  <p className="text-xs text-gray-400">
+                                    Diff: <span className="text-[var(--color-accent)] font-bold">+{winnerData.differential}</span>
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-[10px] text-[var(--color-accent)] uppercase font-bold tracking-wider">🏆 Winner</p>
-                              <p className="text-white font-bold text-lg">{matchData.winner}</p>
+                          ))
+                        ) : (
+                          // Single winner - show old format
+                          <div className="bg-gradient-to-r from-[var(--color-accent)]/20 to-[var(--color-primary)]/20 backdrop-blur-sm rounded-xl p-4 border-2 border-[var(--color-accent)]/50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-[var(--color-accent)] flex items-center justify-center">
+                                  <Trophy size={20} className="text-black" />
+                                </div>
+                                <div>
+                                  <p className="text-[10px] text-[var(--color-accent)] uppercase font-bold tracking-wider">🏆 Winner</p>
+                                  <p className="text-white font-bold text-lg">{matchData.winner || winners[0]}</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-gray-400">Score</p>
+                                <p className="text-2xl font-bold text-[var(--color-accent)]">
+                                  {matchData.winnerScore || 0}W - {matchData.winnerLosses || 0}L
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  Diff: <span className="text-[var(--color-accent)] font-bold">+{matchData.winnerDifferential || 0}</span>
+                                </p>
+                              </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-xs text-gray-400">Score</p>
-                            <p className="text-2xl font-bold text-[var(--color-accent)]">
-                              {matchData.winnerScore}W - {matchData.winnerLosses}L
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              Diff: <span className="text-[var(--color-accent)] font-bold">+{matchData.winnerDifferential}</span>
-                            </p>
-                          </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Losers List */}
@@ -223,7 +258,7 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 font-bold text-sm">
-                                    {index + 2}
+                                    {winners.length + index + 1}
                                   </div>
                                   <div>
                                     <p className="text-white font-semibold">{loser.name}</p>

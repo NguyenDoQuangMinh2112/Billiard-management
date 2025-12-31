@@ -73,10 +73,10 @@ class BilliardAPI {
     return this.request(`/matches/recent?limit=${limit}`);
   }
 
-  async createMatch(winner, loser, cost, participants = [], details = []) {
+  async createMatch(winners, loser, cost, participants = [], details = []) {
     return this.request("/matches", {
       method: "POST",
-      body: JSON.stringify({ winner, loser, cost, participants, details }),
+      body: JSON.stringify({ winners, loser, cost, participants, details }),
     });
   }
 
@@ -93,7 +93,7 @@ class BilliardAPI {
   // ============ Statistics ============
   async getStats(params = {}) {
     const query = new URLSearchParams();
-    if (params.timeframe) query.append('timeframe', params.timeframe);
+    if (params.timeframe) query.append("timeframe", params.timeframe);
     return this.request(`/stats?${query.toString()}`);
   }
 
@@ -107,6 +107,52 @@ class BilliardAPI {
 
   async getLeaderboard(limit = 10) {
     return this.request(`/stats/leaderboard?limit=${limit}`);
+  }
+
+  // ============ Badges ============
+  async getBadges() {
+    return this.request("/badges");
+  }
+
+  async getPlayerBadges(playerId) {
+    return this.request(`/badges/player/${playerId}`);
+  }
+
+  async getAllPlayerBadges() {
+    return this.request("/badges/players/all");
+  }
+
+  async awardBadge(playerId, badgeId, matchId = null) {
+    return this.request("/badges/award", {
+      method: "POST",
+      body: JSON.stringify({
+        player_id: playerId,
+        badge_id: badgeId,
+        match_id: matchId,
+      }),
+    });
+  }
+
+  async awardTurtleMiracle(playerId, matchId = null) {
+    return this.request("/badges/award-turtle-miracle", {
+      method: "POST",
+      body: JSON.stringify({
+        player_id: playerId,
+        match_id: matchId,
+      }),
+    });
+  }
+
+  async removeBadge(playerId, badgeId) {
+    return this.request(`/badges/player/${playerId}/badge/${badgeId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async checkBadges(playerId) {
+    return this.request(`/badges/check/${playerId}`, {
+      method: "POST",
+    });
   }
 }
 
