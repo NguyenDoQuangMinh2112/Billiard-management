@@ -1,11 +1,4 @@
-import {
-  LayoutDashboard,
-  Trophy,
-  History,
-  Settings,
-  Plus,
-  Award,
-} from "lucide-react";
+import { LayoutDashboard, Trophy, History, Settings, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 const MobileNav = ({ activeTab, onTabChange }) => {
@@ -13,7 +6,6 @@ const MobileNav = ({ activeTab, onTabChange }) => {
     { id: "dashboard", label: "Home", icon: LayoutDashboard },
     { id: "logmatch", label: "Log", icon: Plus },
     { id: "leaderboard", label: "Ranks", icon: Trophy },
-    { id: "badges", label: "Badges", icon: Award },
     { id: "history", label: "History", icon: History },
   ];
 

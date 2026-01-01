@@ -15,7 +15,6 @@ import {
   Globe,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import BadgeDisplay from "./BadgeDisplay";
 
 const LeaderboardView = () => {
   const { allStats } = useGame();
@@ -399,10 +398,7 @@ const LeaderboardView = () => {
                       </div>
                     </td>
                     <td className="p-4 font-medium text-[var(--color-text-main)]">
-                      <div className="flex items-center gap-2">
-                        {stat.name}
-                        <BadgeDisplay playerId={stat.id} inline={true} />
-                      </div>
+                      {stat.name}
                     </td>
                     <td className="p-4 text-center font-bold text-green-500">
                       {stat.wins}

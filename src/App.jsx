@@ -7,7 +7,6 @@ import LeaderboardView from "./components/LeaderboardView";
 import HistoryView from "./components/HistoryView";
 import SettingsView from "./components/SettingsView";
 import LogMatchView from "./components/LogMatchView";
-import BadgesView from "./components/BadgesView";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 function App() {
@@ -21,7 +20,6 @@ function App() {
           {activeTab === "dashboard" && <Dashboard />}
           {activeTab === "logmatch" && <LogMatchView />}
           {activeTab === "leaderboard" && <LeaderboardView />}
-          {activeTab === "badges" && <BadgesView />}
           {activeTab === "history" && <HistoryView />}
           {activeTab === "settings" && <SettingsView />}
         </Layout>

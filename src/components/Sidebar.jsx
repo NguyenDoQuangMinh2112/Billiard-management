@@ -12,7 +12,6 @@ import {
   Sun,
   Moon,
   Plus,
-  Award,
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange }) => {
@@ -23,7 +22,6 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "logmatch", label: "Log Match", icon: Plus },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy },
-    { id: "badges", label: "Badges", icon: Award },
     { id: "history", label: "Match History", icon: History },
     { id: "settings", label: "Settings", icon: Settings },
   ];
