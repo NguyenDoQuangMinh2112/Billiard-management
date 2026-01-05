@@ -261,12 +261,15 @@ const LeaderboardView = () => {
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 overflow-hidden min-h-screen">
-      <h1 className="text-3xl font-display font-bold mb-8 flex items-center justify-center gap-3 text-center">
-        <Trophy className="text-yellow-500 fill-yellow-500 glow" />
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-text-main)] via-[var(--color-text-dim)] to-[var(--color-text-dim)] drop-shadow-lg">
-          LEADERBOARD
-        </span>
-      </h1>
+      <div className="flex flex-col items-center mb-12 relative z-10">
+        <h1 className="text-4xl md:text-5xl font-display font-bold text-center text-gradient mb-4 flex items-center gap-3">
+            <Trophy className="text-[var(--color-accent)] hidden md:block" strokeWidth={2.5} size={36} />
+            Leaderboard
+        </h1>
+        <p className="text-[var(--color-text-dim)] text-lg text-center font-light max-w-md">
+            Who rules the table? See the top performers and stats.
+        </p>
+      </div>
 
       {/* Filter Toggle */}
       <div className="flex justify-center mb-12">

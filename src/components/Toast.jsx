@@ -72,15 +72,19 @@ const Toast = ({ id, message, type, onRemove }) => {
       initial={{ opacity: 0, x: 100, scale: 0.8 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 100, scale: 0.8 }}
-      className={`flex items-center gap-3 p-4 rounded-xl border-2 backdrop-blur-lg shadow-2xl ${colors[type]}`}
+      className={`glass-panel flex items-center gap-3 p-4 rounded-xl border-l-[6px] backdrop-blur-xl shadow-2xl relative overflow-hidden ${colors[type]}`}
     >
-      <div className={iconColors[type]}>
+      <div className={`z-10 bg-white/10 p-2 rounded-full ${iconColors[type]}`}>
         {icons[type]}
       </div>
-      <p className="flex-1 font-medium text-sm text-white">{message}</p>
+      <p className="flex-1 font-bold text-sm text-[var(--color-text-main)] z-10 leading-snug">{message}</p>
+      
+      {/* Background Glow */}
+      <div className={`absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-[30px] opacity-20 ${iconColors[type].replace('text-', 'bg-')}`} />
+
       <button
         onClick={() => onRemove(id)}
-        className="text-gray-400 hover:text-white transition-colors"
+        className="text-[var(--color-text-dim)] hover:text-white transition-colors z-10 p-1 hover:bg-white/10 rounded"
       >
         <X size={16} />
       </button>

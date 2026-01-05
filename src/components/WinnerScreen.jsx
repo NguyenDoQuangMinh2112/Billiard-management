@@ -120,8 +120,8 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
                     className="relative"
                   >
                     <div className="absolute inset-0 bg-[var(--color-primary)] blur-xl opacity-50 rounded-full" />
-                    <div className="relative w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
-                      <Trophy size={48} className="text-white" strokeWidth={2.5} />
+                    <div className="relative w-24 h-24 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-primary)] rounded-full flex items-center justify-center shadow-lg">
+                      <Trophy size={48} className="text-black" strokeWidth={2.5} />
                     </div>
                     
                     {/* Floating Stars */}
@@ -137,7 +137,7 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
                       }}
                       className="absolute -top-2 -right-2"
                     >
-                      <Star size={20} className="text-yellow-400 fill-yellow-400" />
+                      <Star size={20} className="text-[var(--color-primary)] fill-[var(--color-primary)]" />
                     </motion.div>
                     <motion.div
                       animate={{ 
@@ -152,7 +152,7 @@ const WinnerScreen = ({ winner, loser, isOpen, onClose, matchData }) => {
                       }}
                       className="absolute -bottom-2 -left-2"
                     >
-                      <Sparkles size={18} className="text-[var(--color-primary)] fill-[var(--color-primary)]" />
+                      <Sparkles size={18} className="text-white fill-white" />
                     </motion.div>
                   </motion.div>
 

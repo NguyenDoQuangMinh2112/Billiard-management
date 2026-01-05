@@ -58,20 +58,20 @@ const NotificationDropdown = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-3 w-80 md:w-96 bg-[#1a1a2e]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                        className="absolute right-0 mt-3 w-80 md:w-96 glass-panel border border-[var(--color-border)] rounded-2xl shadow-2xl z-50 overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
-                            <h3 className="font-bold text-white flex items-center gap-2">
+                        <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between bg-white/5 backdrop-blur-sm">
+                            <h3 className="font-bold text-[var(--color-text-main)] flex items-center gap-2 font-display">
                                 Notifications
-                                <span className="text-xs font-normal text-gray-500 bg-black/20 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-bold text-[var(--color-text-dim)] bg-black/40 px-2 py-0.5 rounded-full border border-white/5">
                                     {notifications.length}
                                 </span>
                             </h3>
                             {notifications.length > 0 && (
                                 <button 
                                     onClick={clearNotifications}
-                                    className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
+                                    className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-red-500/10"
                                 >
                                     <Trash2 size={12} /> Clear all
                                 </button>
@@ -79,50 +79,52 @@ const NotificationDropdown = () => {
                         </div>
 
                         {/* List */}
-                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-[var(--color-surface)]/95">
                             {notifications.length === 0 ? (
-                                <div className="p-8 text-center text-gray-500 flex flex-col items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                                        <Bell size={20} className="opacity-50" />
+                                <div className="p-12 text-center text-[var(--color-text-dim)] flex flex-col items-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center shadow-inner">
+                                        <Bell size={24} className="opacity-30" />
                                     </div>
-                                    <p className="text-sm">No notifications yet</p>
+                                    <p className="text-sm font-light">No new notifications</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-white/5">
+                                <div className="divide-y divide-[var(--color-border)]">
                                     {notifications.map((notif) => (
                                         <div 
                                             key={notif.id} 
-                                            className={`p-4 hover:bg-white/5 transition-colors group relative ${!notif.read ? 'bg-[var(--color-primary)]/5' : ''}`}
+                                            className={`p-4 hover:bg-[var(--color-highlight)] transition-all group relative ${!notif.read ? 'bg-[var(--color-primary)]/5' : ''}`}
                                         >
-                                            <div className="flex gap-3">
+                                            <div className="flex gap-4">
                                                 {/* Icon based on type */}
-                                                <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${
-                                                    notif.type === 'payment' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                                                <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg ${
+                                                    notif.type === 'payment' 
+                                                        ? 'bg-gradient-to-br from-green-500/20 to-green-900/10 text-green-400 border border-green-500/20' 
+                                                        : 'bg-gradient-to-br from-blue-500/20 to-blue-900/10 text-blue-400 border border-blue-500/20'
                                                 }`}>
                                                     {notif.type === 'payment' ? <DollarSign size={18} /> : <Check size={18} />}
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-start mb-0.5">
-                                                        <p className={`text-sm font-bold ${!notif.read ? 'text-white' : 'text-gray-300'}`}>
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <p className={`text-sm font-bold ${!notif.read ? 'text-[var(--color-text-main)]' : 'text-[var(--color-text-dim)]'}`}>
                                                             {notif.title}
                                                         </p>
-                                                        <span className="text-[10px] text-gray-500 whitespace-nowrap ml-2">
+                                                        <span className="text-[10px] text-[var(--color-text-dim)] whitespace-nowrap ml-2 opacity-70">
                                                             {formatDate(notif.timestamp)}
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-gray-400 leading-relaxed break-words">
+                                                    <p className="text-xs text-[var(--color-text-dim)] leading-relaxed break-words font-light">
                                                         {notif.message}
                                                     </p>
                                                     
                                                     {/* Context Data Visualization */}
                                                     {notif.data && notif.data.currentPayer && (
-                                                        <div className="mt-2 text-[10px] flex items-center gap-2">
-                                                            <span className="bg-white/10 px-1.5 py-0.5 rounded text-gray-300">
+                                                        <div className="mt-2 text-[10px] flex items-center gap-2 bg-black/20 p-2 rounded-lg border border-white/5 w-fit">
+                                                            <span className="text-gray-300">
                                                                 {notif.data.currentPayer}
                                                             </span>
-                                                            <span className="text-gray-600">→</span>
-                                                            <span className="bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5 rounded font-bold border border-[var(--color-primary)]/20">
+                                                            <span className="text-[var(--color-text-dim)]">→</span>
+                                                            <span className="text-[var(--color-primary)] font-bold">
                                                                 {notif.data.nextPayer}
                                                             </span>
                                                         </div>
@@ -132,7 +134,7 @@ const NotificationDropdown = () => {
                                             
                                             {/* Unread Indicator */}
                                             {!notif.read && (
-                                                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[var(--color-primary)] shadow-lg shadow-[var(--color-primary)]/50" />
+                                                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)] animate-pulse" />
                                             )}
                                         </div>
                                     ))}
