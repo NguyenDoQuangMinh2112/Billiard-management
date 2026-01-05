@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
   Plus,
+  Film
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange }) => {
@@ -23,6 +24,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     { id: "logmatch", label: "Log Match", icon: Plus },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy },
     { id: "history", label: "Match History", icon: History },
+    { id: "highlights", label: "Highlights", icon: Film },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 

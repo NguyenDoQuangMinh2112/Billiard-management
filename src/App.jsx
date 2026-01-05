@@ -8,6 +8,7 @@ import HistoryView from "./components/HistoryView";
 import SettingsView from "./components/SettingsView";
 import LogMatchView from "./components/LogMatchView";
 import LoadingSpinner from "./components/LoadingSpinner";
+import HighlightsView from "./components/HighlightsView";
 
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -21,6 +22,7 @@ function App() {
           {activeTab === "logmatch" && <LogMatchView />}
           {activeTab === "leaderboard" && <LeaderboardView />}
           {activeTab === "history" && <HistoryView />}
+          {activeTab === "highlights" && <HighlightsView />}
           {activeTab === "settings" && <SettingsView />}
         </Layout>
       </GameProvider>
