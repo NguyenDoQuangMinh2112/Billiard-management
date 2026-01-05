@@ -73,10 +73,10 @@ class BilliardAPI {
     return this.request(`/matches/recent?limit=${limit}`);
   }
 
-  async createMatch(winner, loser, cost, participants = [], details = []) {
+  async createMatch(winners, loser, cost, participants = [], details = []) {
     return this.request("/matches", {
       method: "POST",
-      body: JSON.stringify({ winner, loser, cost, participants, details }),
+      body: JSON.stringify({ winners, loser, cost, participants, details }),
     });
   }
 
@@ -93,7 +93,7 @@ class BilliardAPI {
   // ============ Statistics ============
   async getStats(params = {}) {
     const query = new URLSearchParams();
-    if (params.timeframe) query.append('timeframe', params.timeframe);
+    if (params.timeframe) query.append("timeframe", params.timeframe);
     return this.request(`/stats?${query.toString()}`);
   }
 
