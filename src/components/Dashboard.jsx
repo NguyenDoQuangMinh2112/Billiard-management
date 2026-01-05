@@ -7,7 +7,6 @@ import {
   Wallet,
   Trophy,
   Clock,
-  ArrowUpRight,
   TrendingUp,
   Users,
   Target,
