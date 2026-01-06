@@ -12,7 +12,7 @@ import {
   Sun,
   Moon,
   Plus,
-  Film
+  Film,
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange }) => {
@@ -44,7 +44,10 @@ const Sidebar = ({ activeTab, onTabChange }) => {
             animate={{ opacity: 1 }}
             className="font-display font-bold text-xl whitespace-nowrap tracking-wide"
           >
-            Pool<span className="text-[var(--color-primary)] drop-shadow-[0_0_5px_rgba(0,240,255,0.5)]">Stats</span>
+            Pool
+            <span className="text-[var(--color-primary)] drop-shadow-[0_0_5px_rgba(0,240,255,0.5)]">
+              Stats
+            </span>
           </motion.div>
         )}
       </div>
@@ -59,13 +62,18 @@ const Sidebar = ({ activeTab, onTabChange }) => {
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative overflow-hidden ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer ${
                 isActive
                   ? "bg-[var(--color-primary)] text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)]"
                   : "text-[var(--color-text-dim)] hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-text-main)] hover:pl-5"
               }`}
             >
-              <Icon size={20} className={`transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
+              <Icon
+                size={20}
+                className={`transition-transform duration-300 ${
+                  isActive ? "scale-110" : "group-hover:scale-110"
+                }`}
+              />
 
               {!collapsed && (
                 <motion.span
@@ -93,7 +101,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
         {/* Collapse Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-[var(--color-highlight)] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors border border-transparent hover:border-[var(--color-border)]"
+          className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-[var(--color-highlight)] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors border border-transparent hover:border-[var(--color-border)] cursor-pointer"
         >
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>

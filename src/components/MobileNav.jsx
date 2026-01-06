@@ -1,4 +1,11 @@
-import { LayoutDashboard, Trophy, History, Settings, Plus, Film } from "lucide-react";
+import {
+  LayoutDashboard,
+  Trophy,
+  History,
+  Settings,
+  Plus,
+  Film,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 const MobileNav = ({ activeTab, onTabChange }) => {
@@ -21,7 +28,7 @@ const MobileNav = ({ activeTab, onTabChange }) => {
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative w-16 ${
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative w-16 cursor-pointer ${
                 isActive
                   ? "text-[var(--color-primary)] font-bold drop-shadow-[0_0_8px_rgba(0,240,255,0.4)]"
                   : "text-[var(--color-text-dim)] hover:text-[var(--color-text-main)]"
@@ -34,7 +41,11 @@ const MobileNav = ({ activeTab, onTabChange }) => {
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
-              <Icon size={24} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "animate-pulse" : ""} />
+              <Icon
+                size={24}
+                strokeWidth={isActive ? 2.5 : 2}
+                className={isActive ? "animate-pulse" : ""}
+              />
               <span className="text-[10px] tracking-wide">{tab.label}</span>
             </button>
           );

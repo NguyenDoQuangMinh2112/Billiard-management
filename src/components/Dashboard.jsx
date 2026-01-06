@@ -94,7 +94,7 @@ const Dashboard = () => {
               onClick={() => setTimeframe(t)}
               aria-current={timeframe === t ? "page" : undefined}
               aria-label={`View stats for ${t}`}
-              className={`px-6 py-2.5 text-sm font-bold rounded-xl capitalize transition-all duration-300 relative overflow-hidden ${
+              className={`px-6 py-2.5 text-sm font-bold rounded-xl capitalize transition-all duration-300 relative overflow-hidden cursor-pointer ${
                 timeframe === t
                   ? "text-black shadow-[0_0_15px_rgba(0,240,255,0.4)]"
                   : "text-[var(--color-text-dim)] hover:text-white hover:bg-white/5"
@@ -263,7 +263,7 @@ const Dashboard = () => {
               Recent Matches
             </h3>
             <div className="p-2 bg-[var(--color-accent)]/10 rounded-full animate-pulse-glow">
-                <Sparkles className="text-[var(--color-accent)]" size={16} />
+              <Sparkles className="text-[var(--color-accent)]" size={16} />
             </div>
           </div>
           <div className="space-y-4 p-1 max-h-[500px] overflow-y-auto no-scrollbar">
@@ -296,9 +296,7 @@ const Dashboard = () => {
                         <span className="text-[var(--color-text-dim)] font-normal text-xs opacity-50">
                           vs
                         </span>
-                        <span className="text-red-400">
-                          {match.loser}
-                        </span>
+                        <span className="text-red-400">{match.loser}</span>
                       </div>
                       <div className="text-xs text-[var(--color-text-dim)] mt-1 flex items-center gap-2 opacity-70">
                         <Clock size={12} />
@@ -329,9 +327,9 @@ const Dashboard = () => {
                   No matches recorded yet.
                 </p>
                 <div className="mt-4">
-                     <span className="text-xs bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full border border-[var(--color-primary)]/20">
-                        Start Playing!
-                     </span>
+                  <span className="text-xs bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full border border-[var(--color-primary)]/20">
+                    Start Playing!
+                  </span>
                 </div>
               </div>
             )}
