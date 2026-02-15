@@ -40,10 +40,23 @@ const HistoryView = () => {
         </div>
 
         <div className="px-6 py-3 rounded-2xl bg-black/20 border border-[var(--color-border)] text-sm font-mono text-[var(--color-text-dim)] backdrop-blur-md">
-          Total Matches:{" "}
-          <span className="text-[var(--color-primary)] font-bold text-lg ml-2">
-            {matches.length}
-          </span>
+          <div className="flex flex-col md:flex-row md:items-center md:gap-6">
+            <div>
+              Total Matches:{" "}
+              <span className="text-[var(--color-primary)] font-bold text-lg ml-2">
+                {matches.length}
+              </span>
+            </div>
+
+            <div className="mt-2 md:mt-0">
+              Total Spent:{" "}
+              <span className="text-[var(--color-accent)] font-bold text-lg ml-2">
+                {fmtMoney(
+                  matches.reduce((sum, m) => sum + Number(m?.cost || 0), 0),
+                )}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -77,17 +90,17 @@ const HistoryView = () => {
               const winners = Array.isArray(match.winners)
                 ? match.winners
                 : match.winner
-                ? [match.winner]
-                : [];
+                  ? [match.winner]
+                  : [];
               // Find the third player who is neither winner nor loser
               let thirdPlayer = null;
               if (match.participants && match.participants.length > 0) {
                 thirdPlayer = match.participants.find(
-                  (p) => !winners.includes(p) && p !== match.loser
+                  (p) => !winners.includes(p) && p !== match.loser,
                 );
               } else {
                 thirdPlayer = players.find(
-                  (p) => !winners.includes(p) && p !== match.loser
+                  (p) => !winners.includes(p) && p !== match.loser,
                 );
               }
 
@@ -229,7 +242,7 @@ const HistoryView = () => {
                           onClick={() => {
                             if (
                               window.confirm(
-                                "Delete this match record? This cannot be undone."
+                                "Delete this match record? This cannot be undone.",
                               )
                             ) {
                               deleteMatch(match.id);

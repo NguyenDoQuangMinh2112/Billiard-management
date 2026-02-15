@@ -102,7 +102,7 @@ const Dashboard = () => {
               {timeframe === t && (
                 <motion.div
                   layoutId="active-timeframe"
-                  className="absolute inset-0 bg-[var(--color-primary)] z-0"
+                  className="absolute inset-0 bg-[var(--c olor-primary)] z-0"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
