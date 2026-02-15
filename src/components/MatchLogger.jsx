@@ -222,49 +222,61 @@ const MatchLogger = ({ isOpen, onClose }) => {
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         className="fixed inset-0 m-auto w-full max-w-lg h-fit p-4 z-50 pointer-events-none flex items-center justify-center"
                     >
-                        <div className="bg-[var(--color-surface)] w-full border border-[var(--color-highlight)] rounded-2xl p-6 shadow-2xl relative pointer-events-auto overflow-hidden text-[var(--color-text-main)]">
+                        <div className="glass-panel w-full rounded-3xl p-6 md:p-8 shadow-2xl relative pointer-events-auto overflow-hidden text-[var(--color-text-main)] border border-[var(--color-border)]">
                             {/* Decorative Background */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary)]/5 blur-[80px] rounded-full pointer-events-none" />
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary)]/10 blur-[80px] rounded-full pointer-events-none" />
 
-                            <button onClick={onClose} className="absolute top-4 right-4 text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors">
+                            <button 
+                                onClick={onClose} 
+                                aria-label="Close modal"
+                                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-[var(--color-text-dim)] hover:text-white transition-colors"
+                            >
                                 <X size={24} />
                             </button>
 
-                            <h2 className="text-2xl font-display font-bold mb-6 flex items-center gap-2">
-                                <span className="w-10 h-10 rounded-xl bg-[var(--color-primary)] text-black flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-                                    <Trophy size={20} />
+                            <h2 className="text-2xl md:text-3xl font-display font-bold mb-8 flex items-center gap-3">
+                                <span className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dim)] text-black flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.3)]">
+                                    <Trophy size={24} strokeWidth={2.5} />
                                 </span>
                                 Log Match Result
                             </h2>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-8">
                                 {/* AI Scanner Section */}
                                 <div className="relative group">
-                                    <div className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center transition-all ${isScanning ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-highlight)] hover:border-[var(--color-text-dim)] bg-[var(--color-background)] hover:bg-[var(--color-highlight)]'}`}>
+                                    <div 
+                                        role="button"
+                                        tabIndex={0}
+                                        className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center transition-all min-h-[140px] ${isScanning ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-border)] hover:border-[var(--color-primary)] bg-black/20 hover:bg-black/40'}`}
+                                    >
                                         <input 
                                             type="file" 
                                             accept="image/*" 
                                             onChange={handleFileUpload} 
                                             disabled={isScanning}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                                            aria-label="Upload receipt for AI scanning"
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait z-10"
                                         />
                                         
                                         {isScanning ? (
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Loader className="animate-spin text-[var(--color-primary)]" size={32} />
-                                                <div className="text-sm font-bold text-[var(--color-primary)]">{scanStatus}</div>
-                                                <div className="w-32 h-1 bg-black/50 rounded-full mt-1 overflow-hidden">
-                                                    <div className="h-full bg-[var(--color-primary)] transition-all duration-300" style={{ width: `${scanProgress}%` }} />
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="relative">
+                                                    <Loader className="animate-spin text-[var(--color-primary)]" size={32} />
+                                                    <div className="absolute inset-0 animate-ping opacity-50 bg-[var(--color-primary)] rounded-full" />
+                                                </div>
+                                                <div className="text-sm font-bold text-[var(--color-primary)] tracking-wide">{scanStatus}</div>
+                                                <div className="w-48 h-1.5 bg-black/50 rounded-full mt-2 overflow-hidden">
+                                                    <div className="h-full bg-[var(--color-primary)] transition-all duration-300 ease-out" style={{ width: `${scanProgress}%` }} />
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col items-center gap-2 text-center">
-                                                <div className="p-3 rounded-full bg-[var(--color-highlight)] group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors">
-                                                    <ScanLine size={24} />
+                                            <div className="flex flex-col items-center gap-3 text-center pointer-events-none">
+                                                <div className="p-4 rounded-full bg-[var(--color-surface)] shadow-lg group-hover:scale-110 transition-transform duration-300 ring-1 ring-white/10 group-hover:ring-[var(--color-primary)]/50">
+                                                    <ScanLine size={28} className="text-[var(--color-text-dim)] group-hover:text-[var(--color-primary)] transition-colors" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-sm">AI Auto-Fill</p>
-                                                    <p className="text-xs text-[var(--color-text-dim)]">Upload receipt image to extract total</p>
+                                                    <p className="font-bold text-base group-hover:text-[var(--color-primary)] transition-colors">AI Auto-Fill Bill</p>
+                                                    <p className="text-sm text-[var(--color-text-dim)] mt-1">Tap to scan receipt total</p>
                                                 </div>
                                             </div>
                                         )}
@@ -275,188 +287,129 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                         <motion.div 
                                             initial={{ opacity: 0, y: 10 }} 
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-black text-[10px] font-bold rounded uppercase flex items-center gap-1"
+                                            className="absolute -top-3 right-4 px-3 py-1.5 bg-green-500 text-black text-xs font-bold rounded-full uppercase flex items-center gap-1.5 shadow-lg shadow-green-500/20"
                                         >
-                                            <UploadCloud size={10} /> Recognized
+                                            <UploadCloud size={12} /> Recognized
                                         </motion.div>
                                     )}
                                 </div>
 
                                 {/* Next Payer Alert */}
-                                <div className="p-4 bg-[var(--color-secondary)]/10 border-l-4 border-[var(--color-secondary)] rounded-r-xl flex items-center justify-between">
+                                <div className="p-5 bg-gradient-to-r from-[var(--color-secondary)]/20 to-[var(--color-secondary)]/5 border-l-4 border-[var(--color-secondary)] rounded-r-2xl flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] text-[var(--color-secondary)] uppercase font-bold tracking-wider mb-1">Payer</p>
-                                        <p className="text-lg font-bold flex items-center gap-2">
-                                            {nextPayer}
-                                            <span className="text-xs font-normal text-[var(--color-text-dim)] bg-[var(--color-background)] px-2 py-0.5 rounded-full">It's their turn</span>
-                                        </p>
+                                        <p className="text-xs text-[var(--color-secondary)] uppercase font-bold tracking-widest mb-1.5">Current Payer</p>
+                                        <div className="flex items-center gap-3">
+                                            <p className="text-xl font-bold text-white">{nextPayer}</p>
+                                            <span className="text-[10px] font-bold text-black bg-[var(--color-secondary)] px-2 py-0.5 rounded-full">TURN</span>
+                                        </div>
                                     </div>
-                                    <div className="w-10 h-10 rounded-full bg-[var(--color-secondary)]/20 flex items-center justify-center text-[var(--color-secondary)]">
-                                        <DollarSign size={20} />
+                                    <div className="w-12 h-12 rounded-full bg-[var(--color-secondary)]/20 ring-1 ring-[var(--color-secondary)]/40 flex items-center justify-center text-[var(--color-secondary)] shadow-[0_0_15px_rgba(112,0,223,0.3)]">
+                                        <DollarSign size={24} />
                                     </div>
                                 </div>
 
                                 {/* Player Scores Section */}
-                                <div className="space-y-4">
+                                <div className="space-y-6">
                                     {/* Mode Toggle */}
-                                    <div className="flex justify-center mb-2">
-                                        <div className="bg-[var(--color-background)] p-1 rounded-lg flex gap-1 border border-[var(--color-highlight)]">
-                                            <button
-                                                type="button"
-                                                onClick={() => setNumPlayers(2)}
-                                                className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${numPlayers === 2 ? 'bg-[var(--color-primary)] text-black shadow-lg' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-main)]'}`}
-                                            >
-                                                2 Players
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setNumPlayers(3)}
-                                                className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${numPlayers === 3 ? 'bg-[var(--color-primary)] text-black shadow-lg' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-main)]'}`}
-                                            >
-                                                3 Players
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Player 1 */}
-                                    <div className="flex items-end gap-3">
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider">Player 1</label>
-                                            <div className="relative">
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)]">
-                                                    <User size={18} />
-                                                </div>
-                                                <select 
-                                                    value={player1} 
-                                                    onChange={(e) => setPlayer1(e.target.value)}
-                                                    className={`w-full bg-[var(--color-background)] border ${errors.players ? 'border-red-500' : 'border-[var(--color-highlight)]'} rounded-xl py-3 pl-10 pr-10 text-lg focus:border-[var(--color-primary)] outline-none appearance-none cursor-pointer hover:bg-[var(--color-highlight)] transition-colors`}
+                                    <div className="flex justify-center">
+                                        <div className="bg-black/30 p-1.5 rounded-xl flex gap-1 border border-white/10">
+                                            {[2, 3].map(count => (
+                                                <button
+                                                    key={count}
+                                                    type="button"
+                                                    onClick={() => setNumPlayers(count)}
+                                                    className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
+                                                        numPlayers === count 
+                                                            ? 'bg-[var(--color-primary)] text-black shadow-lg shadow-[var(--color-primary)]/20' 
+                                                            : 'text-[var(--color-text-dim)] hover:text-white hover:bg-white/5'
+                                                    }`}
                                                 >
-                                                    <option value="" disabled>Select Player</option>
-                                                    {players.map(p => (
-                                                        <option key={p} value={p}>{p}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)]">
-                                                    <ChevronDown size={16} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="w-24 space-y-1">
-                                            <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider text-center block">Wins</label>
-                                            <input 
-                                                type="number" 
-                                                value={score1}
-                                                onChange={(e) => setScore1(e.target.value)}
-                                                placeholder="0"
-                                                className={`w-full bg-[var(--color-background)] border ${errors.scores ? 'border-red-500' : 'border-[var(--color-highlight)]'} rounded-xl p-3 text-lg font-mono font-bold text-center focus:border-[var(--color-primary)] outline-none transition-all`}
-                                            />
+                                                    {count} Players
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
 
-                                    {/* Player 2 */}
-                                    <div className="flex items-end gap-3">
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider">Player 2</label>
-                                            <div className="relative">
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)]">
-                                                    <User size={18} />
-                                                </div>
-                                                <select 
-                                                    value={player2} 
-                                                    onChange={(e) => setPlayer2(e.target.value)}
-                                                    className={`w-full bg-[var(--color-background)] border ${errors.players ? 'border-red-500' : 'border-[var(--color-highlight)]'} rounded-xl py-3 pl-10 pr-10 text-lg focus:border-[var(--color-primary)] outline-none appearance-none cursor-pointer hover:bg-[var(--color-highlight)] transition-colors`}
-                                                >
-                                                    <option value="" disabled>Select Player</option>
-                                                    {players.map(p => (
-                                                        <option key={p} value={p}>{p}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)]">
-                                                    <ChevronDown size={16} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="w-24 space-y-1">
-                                            <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider text-center block">Wins</label>
-                                            <input 
-                                                type="number" 
-                                                value={score2}
-                                                onChange={(e) => setScore2(e.target.value)}
-                                                placeholder="0"
-                                                className={`w-full bg-[var(--color-background)] border ${errors.scores ? 'border-red-500' : 'border-[var(--color-highlight)]'} rounded-xl p-3 text-lg font-mono font-bold text-center focus:border-[var(--color-primary)] outline-none transition-all`}
-                                            />
-                                        </div>
-                                    </div>
+                                    {/* Players Grid */}
+                                    <div className="space-y-4">
+                                        {[player1, player2, player3].slice(0, numPlayers).map((currentUser, idx) => {
+                                            const setPlayer = [setPlayer1, setPlayer2, setPlayer3][idx];
+                                            const score = [score1, score2, score3][idx];
+                                            const setScore = [setScore1, setScore2, setScore3][idx];
+                                            
+                                            // Accessibility label for inputs
+                                            const playerLabel = `Player ${idx + 1}`;
+                                            const scoreLabel = `Score for Player ${idx + 1}`;
 
-                                    {/* Player 3 (Conditional) */}
-                                    <AnimatePresence>
-                                        {numPlayers === 3 && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                className="flex items-end gap-3 overflow-hidden"
-                                            >
-                                                <div className="flex-1 space-y-1">
-                                                    <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider">Player 3</label>
-                                                    <div className="relative">
-                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)]">
-                                                            <User size={18} />
-                                                        </div>
-                                                        <select 
-                                                            value={player3} 
-                                                            onChange={(e) => setPlayer3(e.target.value)}
-                                                            className={`w-full bg-[var(--color-background)] border ${errors.players ? 'border-red-500' : 'border-[var(--color-highlight)]'} rounded-xl py-3 pl-10 pr-10 text-lg focus:border-[var(--color-primary)] outline-none appearance-none cursor-pointer hover:bg-[var(--color-highlight)] transition-colors`}
-                                                        >
-                                                            <option value="" disabled>Select Player</option>
-                                                            {players.map(p => (
-                                                                <option key={p} value={p}>{p}</option>
-                                                            ))}
-                                                        </select>
-                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)]">
-                                                            <ChevronDown size={16} />
+                                            return (
+                                                <div key={idx} className="flex items-end gap-3 md:gap-4">
+                                                    <div className="flex-1 space-y-2">
+                                                        <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider ml-1">{playerLabel}</label>
+                                                        <div className="relative group">
+                                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)] group-focus-within:text-[var(--color-primary)] transition-colors">
+                                                                <User size={20} />
+                                                            </div>
+                                                            <select 
+                                                                value={currentUser} 
+                                                                onChange={(e) => setPlayer(e.target.value)}
+                                                                aria-label={playerLabel}
+                                                                className={`w-full bg-black/20 border ${errors.players ? 'border-red-500/50' : 'border-white/10'} rounded-2xl py-4 pl-12 pr-10 text-lg focus:border-[var(--color-primary)] outline-none appearance-none cursor-pointer hover:bg-white/5 transition-colors`}
+                                                            >
+                                                                <option value="" disabled>Select Player</option>
+                                                                {players.map(p => (
+                                                                    <option key={p} value={p}>{p}</option>
+                                                                ))}
+                                                            </select>
+                                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-dim)]">
+                                                                <ChevronDown size={18} />
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    <div className="w-28 space-y-2">
+                                                        <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider text-center block">Wins</label>
+                                                        <input 
+                                                            type="number" 
+                                                            value={score}
+                                                            onChange={(e) => setScore(e.target.value)}
+                                                            placeholder="0"
+                                                            aria-label={scoreLabel}
+                                                            className={`w-full bg-black/20 border ${errors.scores ? 'border-red-500/50' : 'border-white/10'} rounded-2xl p-4 text-xl font-mono font-bold text-center focus:border-[var(--color-primary)] outline-none transition-all hover:bg-white/5`}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div className="w-24 space-y-1">
-                                                    <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider text-center block">Wins</label>
-                                                    <input 
-                                                        type="number" 
-                                                        value={score3}
-                                                        onChange={(e) => setScore3(e.target.value)}
-                                                        placeholder="0"
-                                                        className={`w-full bg-[var(--color-background)] border ${errors.scores ? 'border-red-500' : 'border-[var(--color-highlight)]'} rounded-xl p-3 text-lg font-mono font-bold text-center focus:border-[var(--color-primary)] outline-none transition-all`}
-                                                    />
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
                                 {(errors.players || errors.scores) && (
-                                    <p className="text-xs text-red-500 mt-1 font-medium">{errors.players || errors.scores}</p>
+                                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                        {errors.players || errors.scores}
+                                    </div>
                                 )}
 
-                                <div className="space-y-2">
-                                    <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider">Total Cost (VND)</label>
-                                    <div className="relative">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] font-bold text-lg">₫</div>
+                                <div className="space-y-3 pt-2">
+                                    <label className="text-xs text-[var(--color-text-dim)] font-bold uppercase tracking-wider ml-1">Total Bill Amount</label>
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] group-focus-within:text-[var(--color-accent)] font-bold text-xl transition-colors">₫</div>
                                         <input 
                                             type="number" 
                                             value={cost}
                                             onChange={(e) => setCost(e.target.value)}
                                             placeholder="0"
-                                            className={`w-full bg-[var(--color-background)] border ${errors.cost ? 'border-red-500' : 'border-[var(--color-highlight)]'} rounded-xl p-4 pl-10 text-2xl font-mono font-bold focus:border-[var(--color-accent)] outline-none transition-all placeholder:text-[var(--color-text-dim)]`}
                                             required
+                                            aria-label="Total cost in VND"
+                                            className={`w-full bg-black/30 border ${errors.cost ? 'border-red-500/50' : 'border-white/10'} rounded-2xl p-5 pl-12 text-3xl font-mono font-bold focus:border-[var(--color-accent)] outline-none transition-all placeholder:text-white/10`}
                                         />
-                                        {/* Quick selection tags */}
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                                        {/* Quick Amount Pills */}
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2">
                                             {[50000, 100000, 200000].map(amt => (
                                                 <button 
                                                     key={amt}
                                                     type="button"
                                                     onClick={() => setCost(amt)}
-                                                    className="px-2 py-1 bg-[var(--color-highlight)] hover:bg-[var(--color-primary)]/20 rounded text-[10px] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors"
+                                                    className="px-3 py-1.5 bg-white/5 hover:bg-[var(--color-accent)]/20 border border-white/5 hover:border-[var(--color-accent)] rounded-lg text-xs font-medium text-[var(--color-text-dim)] hover:text-[var(--color-accent)] transition-all hidden sm:block"
                                                 >
                                                     {(amt/1000)}k
                                                 </button>
@@ -464,22 +417,22 @@ const MatchLogger = ({ isOpen, onClose }) => {
                                         </div>
                                     </div>
                                     {errors.cost && (
-                                        <p className="text-xs text-red-500 font-medium">{errors.cost}</p>
+                                        <p className="text-xs text-red-500 font-medium ml-1">{errors.cost}</p>
                                     )}
                                 </div>
 
                                 <button 
                                     type="submit" 
                                     disabled={isSubmitting}
-                                    className="w-full py-4 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold text-lg rounded-xl transition-all shadow-lg shadow-[var(--color-primary)]/20 hover:shadow-[var(--color-accent)]/30 transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:translate-y-0 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="w-full py-5 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-box font-black text-xl rounded-2xl transition-all shadow-[0_4px_20px_rgba(0,240,255,0.2)] hover:shadow-[0_4px_30px_rgba(57,255,20,0.4)] transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:translate-y-0 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-4"
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <Loader className="animate-spin" size={20} />
-                                            Logging...
+                                            <Loader className="animate-spin" size={24} />
+                                            <span>Processing...</span>
                                         </>
                                     ) : (
-                                        'Log Match'
+                                        'LOG MATCH'
                                     )}
                                 </button>
                             </form>

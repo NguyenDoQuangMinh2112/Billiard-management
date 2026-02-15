@@ -12,7 +12,7 @@ import {
   Sun,
   Moon,
   Plus,
-  Film
+  Film,
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange }) => {
@@ -31,20 +31,23 @@ const Sidebar = ({ activeTab, onTabChange }) => {
   return (
     <motion.div
       animate={{ width: collapsed ? 80 : 250 }}
-      className="hidden md:flex h-screen bg-[var(--color-surface)] border-r border-[var(--color-border,rgba(255,255,255,0.05))] flex-col sticky top-0 z-40 transition-all shadow-sm"
+      className="hidden md:flex h-screen bg-[var(--color-surface)]/80 backdrop-blur-xl border-r border-[var(--color-border)] flex-col sticky top-0 z-40 transition-all shadow-2xl"
     >
       {/* Logo Area */}
       <div className="p-6 flex items-center gap-3 overflow-hidden">
-        <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)] flex-shrink-0 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dim)] flex-shrink-0 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.3)]">
           <span className="font-display font-bold text-black text-xl">P</span>
         </div>
         {!collapsed && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="font-display font-bold text-xl whitespace-nowrap"
+            className="font-display font-bold text-xl whitespace-nowrap tracking-wide"
           >
-            Pool<span className="text-[var(--color-primary)]">Stats</span>
+            Pool
+            <span className="text-[var(--color-primary)] drop-shadow-[0_0_5px_rgba(0,240,255,0.5)]">
+              Stats
+            </span>
           </motion.div>
         )}
       </div>
@@ -59,13 +62,18 @@ const Sidebar = ({ activeTab, onTabChange }) => {
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative overflow-hidden ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer ${
                 isActive
-                  ? "bg-[var(--color-primary)] text-black font-bold shadow-lg shadow-[var(--color-primary)]/20"
-                  : "text-[var(--color-text-dim)] hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-text-main)]"
+                  ? "bg-[var(--color-primary)] text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                  : "text-[var(--color-text-dim)] hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-text-main)] hover:pl-5"
               }`}
             >
-              <Icon size={20} className={isActive ? "text-black" : ""} />
+              <Icon
+                size={20}
+                className={`transition-transform duration-300 ${
+                  isActive ? "scale-110" : "group-hover:scale-110"
+                }`}
+              />
 
               {!collapsed && (
                 <motion.span
@@ -80,7 +88,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
               {isActive && !collapsed && (
                 <motion.div
                   layoutId="active-pill"
-                  className="absolute right-2 w-1.5 h-1.5 rounded-full bg-black"
+                  className="absolute right-3 w-1.5 h-1.5 rounded-full bg-black animate-pulse"
                 />
               )}
             </button>
@@ -89,11 +97,11 @@ const Sidebar = ({ activeTab, onTabChange }) => {
       </nav>
 
       {/* Footer Area */}
-      <div className="p-4 border-t border-[var(--color-border,rgba(255,255,255,0.05))] space-y-2">
+      <div className="p-4 border-t border-[var(--color-border)] space-y-2">
         {/* Collapse Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-[var(--color-highlight)] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors"
+          className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-[var(--color-highlight)] text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] transition-colors border border-transparent hover:border-[var(--color-border)] cursor-pointer"
         >
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>

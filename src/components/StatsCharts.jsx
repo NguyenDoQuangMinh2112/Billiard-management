@@ -33,13 +33,14 @@ const StatsCharts = ({ expenses, winStats }) => {
                                 outerRadius={80}
                                 paddingAngle={5}
                                 dataKey="value"
+                                stroke="none"
                             >
                                 {expenseData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
                             <Tooltip 
-                                contentStyle={{ backgroundColor: '#0a0a16', borderColor: '#333', borderRadius: '8px' }}
+                                contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                                 itemStyle={{ color: '#fff' }}
                                 formatter={(value) => [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value), 'Spent']}
                             />
@@ -48,8 +49,8 @@ const StatsCharts = ({ expenses, winStats }) => {
                 </div>
                 <div className="flex gap-4 flex-wrap justify-center mt-4">
                     {expenseData.map((entry, index) => (
-                        <div key={entry.name} className="flex items-center gap-2 text-sm text-gray-400">
-                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <div key={entry.name} className="flex items-center gap-2 text-sm text-[var(--color-text-dim)]">
+                            <span className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: COLORS[index % COLORS.length], color: COLORS[index % COLORS.length] }} />
                             {entry.name}
                         </div>
                     ))}
@@ -57,20 +58,20 @@ const StatsCharts = ({ expenses, winStats }) => {
             </div>
 
             {/* Win/Loss Ratio */}
-            <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-lg font-bold mb-4">Win/Loss Metrics</h3>
+            <div className="glass-panel p-6 rounded-2xl border border-[var(--color-border)]">
+                <h3 className="text-lg font-bold mb-4 font-display">Win/Loss Metrics</h3>
                 <div className="w-full h-[250px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={winData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                            <XAxis dataKey="name" stroke="#666" tick={{ fill: '#888' }} />
-                            <YAxis stroke="#666" tick={{ fill: '#888' }} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                            <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} tickLine={false} axisLine={false} />
+                            <YAxis stroke="rgba(255,255,255,0.5)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} tickLine={false} axisLine={false} />
                             <Tooltip 
                                 cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                contentStyle={{ backgroundColor: '#0a0a16', borderColor: '#333', borderRadius: '8px' }}
+                                contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                             />
-                            <Bar dataKey="wins" fill="var(--color-primary)" radius={[4, 4, 0, 0]} stackId="a" />
-                            <Bar dataKey="losses" fill="#333" radius={[4, 4, 0, 0]} stackId="a" />
+                            <Bar dataKey="wins" fill="var(--color-primary)" radius={[4, 4, 0, 0]} stackId="a" animationDuration={1500} />
+                            <Bar dataKey="losses" fill="rgba(255,255,255,0.1)" radius={[4, 4, 0, 0]} stackId="a" animationDuration={1500} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
