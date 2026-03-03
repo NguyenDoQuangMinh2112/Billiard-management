@@ -13,6 +13,7 @@ import {
   Moon,
   Plus,
   Film,
+  Swords,
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange }) => {
@@ -21,7 +22,8 @@ const Sidebar = ({ activeTab, onTabChange }) => {
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "logmatch", label: "Log Match", icon: Plus },
+    { id: "logmatch", label: "Log Match (3P)", icon: Plus },
+    { id: "1v1", label: "1v1 Match", icon: Swords },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy },
     { id: "history", label: "Match History", icon: History },
     { id: "highlights", label: "Highlights", icon: Film },

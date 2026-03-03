@@ -9,6 +9,7 @@ import SettingsView from "./components/SettingsView";
 import LogMatchView from "./components/LogMatchView";
 import LoadingSpinner from "./components/LoadingSpinner";
 import HighlightsView from "./components/HighlightsView";
+import OneVOneView from "./components/OneVOneView";
 
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -20,6 +21,7 @@ function App() {
         <Layout activeTab={activeTab} onTabChange={setActiveTab}>
           {activeTab === "dashboard" && <Dashboard />}
           {activeTab === "logmatch" && <LogMatchView />}
+          {activeTab === "1v1" && <OneVOneView />}
           {activeTab === "leaderboard" && <LeaderboardView />}
           {activeTab === "history" && <HistoryView />}
           {activeTab === "highlights" && <HighlightsView />}

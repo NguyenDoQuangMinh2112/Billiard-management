@@ -5,16 +5,17 @@ import {
   Settings,
   Plus,
   Film,
+  Swords,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const MobileNav = ({ activeTab, onTabChange }) => {
   const tabs = [
     { id: "dashboard", label: "Home", icon: LayoutDashboard },
-    { id: "logmatch", label: "Log", icon: Plus },
+    { id: "logmatch", label: "3P Log", icon: Plus },
+    { id: "1v1", label: "1v1", icon: Swords },
     { id: "leaderboard", label: "Ranks", icon: Trophy },
     { id: "history", label: "History", icon: History },
-    { id: "highlights", label: "Videos", icon: Film },
   ];
 
   return (
