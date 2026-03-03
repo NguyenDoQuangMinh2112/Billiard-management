@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useGame } from "../context/GameContext";
 import { motion } from "framer-motion";
 import {
@@ -6,17 +6,14 @@ import {
   Trophy,
   History,
   Settings,
-  LogOut,
   ChevronRight,
   ChevronLeft,
-  Sun,
-  Moon,
   Plus,
   Film,
   Swords,
 } from "lucide-react";
 
-const Sidebar = ({ activeTab, onTabChange }) => {
+const Sidebar = memo(({ activeTab, onTabChange }) => {
   const { theme, toggleTheme, nextPayer } = useGame();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -110,6 +107,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
       </div>
     </motion.div>
   );
-};
+});
 
+Sidebar.displayName = "Sidebar";
 export default Sidebar;

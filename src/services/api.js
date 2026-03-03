@@ -16,12 +16,28 @@ const API_BASE_URL =
 class BilliardAPI {
   constructor(baseUrl = API_BASE_URL) {
     this.baseUrl = baseUrl;
+    this._cache = new Map(); // simple in-memory cache for GET requests
   }
 
-  async request(endpoint, options = {}) {
+  async request(
+    endpoint,
+    options = {},
+    { timeout = 10000, cache = false } = {},
+  ) {
+    const cacheKey = `${options.method ?? "GET"}:${endpoint}`;
+
+    // Serve from cache for GET requests if available
+    if (cache && options.method == null && this._cache.has(cacheKey)) {
+      return this._cache.get(cacheKey);
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           ...options.headers,
@@ -30,20 +46,38 @@ class BilliardAPI {
 
       const data = await response.json();
 
-      // Check if response was successful
       if (!response.ok) {
         throw new Error(data.error || data.message || "Request failed");
       }
 
+      // Cache successful GET responses
+      if (cache && options.method == null) {
+        this._cache.set(cacheKey, data);
+      }
+
       return data;
     } catch (error) {
+      if (error.name === "AbortError") {
+        console.error("Request timed out:", endpoint);
+        return {
+          success: false,
+          error: "Request timed out. Please try again.",
+        };
+      }
       console.error("API Error:", error);
       return {
         success: false,
         error:
           error instanceof Error ? error.message : "Unknown error occurred",
       };
+    } finally {
+      clearTimeout(timer);
     }
+  }
+
+  // Invalidate cache entry (call after mutations)
+  _invalidate(endpoint) {
+    this._cache.delete(`GET:${endpoint}`);
   }
 
   // ============ Players ============

@@ -1,9 +1,20 @@
+import { useState, useMemo, memo } from "react";
 import { useGame } from "../context/GameContext";
-import { Trash2, Calendar, Swords, Trophy, Clock } from "lucide-react";
+import {
+  Trash2,
+  Calendar,
+  Swords,
+  Trophy,
+  Clock,
+  Search,
+  Filter,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const HistoryView = () => {
+const HistoryView = memo(() => {
   const { matches, deleteMatch, players } = useGame();
+  const [search, setSearch] = useState("");
+  const [filterPayer, setFilterPayer] = useState("all");
 
   const fmtMoney = (n) =>
     new Intl.NumberFormat("vi-VN", {
@@ -22,6 +33,29 @@ const HistoryView = () => {
       minute: "2-digit",
       hour12: false,
     });
+
+  const payerOptions = useMemo(() => {
+    const names = [...new Set(matches.map((m) => m.payer).filter(Boolean))];
+    return names.sort();
+  }, [matches]);
+
+  const filteredMatches = useMemo(() => {
+    return matches.filter((m) => {
+      const winners = Array.isArray(m.winners)
+        ? m.winners
+        : m.winner
+          ? [m.winner]
+          : [];
+      const q = search.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        winners.some((w) => w?.toLowerCase().includes(q)) ||
+        m.loser?.toLowerCase().includes(q) ||
+        m.payer?.toLowerCase().includes(q);
+      const matchesPayer = filterPayer === "all" || m.payer === filterPayer;
+      return matchesSearch && matchesPayer;
+    });
+  }, [matches, search, filterPayer]);
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 min-h-screen">
@@ -64,6 +98,43 @@ const HistoryView = () => {
         {/* Timeline Line (Desktop) */}
         <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-[var(--color-primary)]/50 via-[var(--color-border)] to-transparent hidden md:block" />
 
+        {/* Search + Filter bar */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] pointer-events-none"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by player or payer…"
+              className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-[var(--color-border)] rounded-xl text-sm placeholder:text-[var(--color-text-dim)]/50 focus:outline-none focus:border-[var(--color-primary)]/60 transition-colors"
+            />
+          </div>
+          {payerOptions.length > 0 && (
+            <div className="relative">
+              <Filter
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] pointer-events-none"
+              />
+              <select
+                value={filterPayer}
+                onChange={(e) => setFilterPayer(e.target.value)}
+                className="pl-9 pr-8 py-2.5 bg-white/5 border border-[var(--color-border)] rounded-xl text-sm appearance-none focus:outline-none focus:border-[var(--color-primary)]/60 transition-colors cursor-pointer"
+              >
+                <option value="all">All payers</option>
+                {payerOptions.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
         <AnimatePresence mode="popLayout">
           {matches.length === 0 ? (
             <motion.div
@@ -85,7 +156,7 @@ const HistoryView = () => {
               </p>
             </motion.div>
           ) : (
-            matches.map((match, index) => {
+            filteredMatches.map((match, index) => {
               // Support both old and new winner formats
               const winners = Array.isArray(match.winners)
                 ? match.winners
@@ -261,9 +332,22 @@ const HistoryView = () => {
             })
           )}
         </AnimatePresence>
+
+        {/* No results after filter */}
+        {matches.length > 0 && filteredMatches.length === 0 && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12 text-[var(--color-text-dim)]"
+          >
+            No matches found for &ldquo;{search}&rdquo;
+          </motion.p>
+        )}
       </div>
     </div>
   );
-};
+});
+
+HistoryView.displayName = "HistoryView";
 
 export default HistoryView;
