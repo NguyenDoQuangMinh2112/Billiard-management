@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { motion } from "framer-motion";
 import {
   ScanLine,
@@ -14,7 +14,7 @@ import Tesseract from "tesseract.js";
 import ScoreBoard from "./ScoreBoard";
 import WinnerScreen from "./WinnerScreen";
 
-const LogMatchView = () => {
+const LogMatchView = memo(() => {
   const { nextPayer, addMatch, players, matches } = useGame();
   const { success, error: showError } = useToast();
   // AI Scanning States
@@ -104,7 +104,7 @@ const LogMatchView = () => {
         `Detected amount: ${new Intl.NumberFormat("vi-VN", {
           style: "currency",
           currency: "VND",
-        }).format(foundAmount)}`
+        }).format(foundAmount)}`,
       );
     }
   };
@@ -135,12 +135,12 @@ const LogMatchView = () => {
     // Identify all winners (all players with the highest differential)
     const highestDifferential = playerRankings[0].differential;
     const winners = playerRankings.filter(
-      (p) => p.differential === highestDifferential
+      (p) => p.differential === highestDifferential,
     );
 
     // Find all losers (everyone except winners)
     const losers = playerRankings.filter(
-      (p) => p.differential !== highestDifferential
+      (p) => p.differential !== highestDifferential,
     );
 
     // For backend API, we need to pick the worst loser (lowest differential)
@@ -203,7 +203,7 @@ const LogMatchView = () => {
           success(
             `Match logged! Draw between ${winners
               .map((w) => w.name)
-              .join(", ")}! 🤝`
+              .join(", ")}! 🤝`,
           );
         } else {
           success(`Match logged! ${winners[0].name} wins! 🎉`);
@@ -434,6 +434,8 @@ const LogMatchView = () => {
       />
     </div>
   );
-};
+});
+
+LogMatchView.displayName = "LogMatchView";
 
 export default LogMatchView;

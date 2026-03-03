@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { useGame } from "../context/GameContext";
 import StatsCharts from "./StatsCharts";
@@ -11,13 +11,18 @@ import {
   Users,
   Target,
   Sparkles,
+  ArrowUpRight,
+  Zap,
 } from "lucide-react";
 
-const Dashboard = () => {
+const Dashboard = memo(() => {
   const { nextPayer, allStats, getExpenses, matches, players } = useGame();
   const [timeframe, setTimeframe] = useState("month");
 
-  const expenses = getExpenses(timeframe);
+  const expenses = useMemo(
+    () => getExpenses(timeframe),
+    [getExpenses, timeframe],
+  );
 
   // Format currency
   const fmtMoney = (n) =>
@@ -28,31 +33,32 @@ const Dashboard = () => {
 
   // Top Player
   const topPlayer = allStats[0];
+  const winRate = topPlayer?.matchesPlayed
+    ? Math.round((topPlayer.wins / topPlayer.matchesPlayed) * 100)
+    : 0;
 
   // Calculate additional stats
   const totalMatches = matches.length;
   const activePlayers = players.length;
+
+  const filteredMatchCount = useMemo(() => {
+    const now = new Date();
+    return matches.filter((m) => {
+      const d = new Date(m.date);
+      if (timeframe === "week")
+        return Math.round(Math.abs((now - d) / 86400000)) <= 7;
+      if (timeframe === "month")
+        return (
+          d.getMonth() === now.getMonth() &&
+          d.getFullYear() === now.getFullYear()
+        );
+      if (timeframe === "year") return d.getFullYear() === now.getFullYear();
+      return false;
+    }).length;
+  }, [matches, timeframe]);
+
   const avgMatchCost =
-    totalMatches > 0
-      ? expenses.total /
-        matches.filter((m) => {
-          const d = new Date(m.date);
-          const now = new Date();
-          if (timeframe === "week") {
-            const oneDay = 24 * 60 * 60 * 1000;
-            const diffDays = Math.round(Math.abs((now - d) / oneDay));
-            return diffDays <= 7;
-          }
-          if (timeframe === "month")
-            return (
-              d.getMonth() === now.getMonth() &&
-              d.getFullYear() === now.getFullYear()
-            );
-          if (timeframe === "year")
-            return d.getFullYear() === now.getFullYear();
-          return false;
-        }).length
-      : 0;
+    filteredMatchCount > 0 ? expenses.total / filteredMatchCount : 0;
 
   // Animation variants
   const containerVariants = {
@@ -102,7 +108,7 @@ const Dashboard = () => {
               {timeframe === t && (
                 <motion.div
                   layoutId="active-timeframe"
-                  className="absolute inset-0 bg-[var(--c olor-primary)] z-0"
+                  className="absolute inset-0 bg-[var(--color-primary)] z-0"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
@@ -117,28 +123,38 @@ const Dashboard = () => {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"
       >
         {/* 1. Next Payer Widget */}
         <motion.div
           variants={itemVariants}
-          className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:shadow-[var(--shadow-glow)] transition-all duration-500 border border-[var(--color-border)]"
+          className="glass-panel card-glow p-6 rounded-2xl relative overflow-hidden group hover:shadow-[0_0_30px_rgba(0,240,255,0.18)] transition-all duration-500 border border-[var(--color-border)]"
         >
-          <div className="absolute -right-4 -top-4 w-32 h-32 bg-[var(--color-primary)]/20 blur-[60px] rounded-full group-hover:bg-[var(--color-primary)]/30 transition-all duration-500" />
+          <div className="absolute -right-6 -top-6 w-36 h-36 bg-[var(--color-primary)]/15 blur-[70px] rounded-full group-hover:bg-[var(--color-primary)]/25 transition-all duration-700" />
+          {/* Top neon line */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
           <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-primary)]/5 rounded-xl text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-[var(--color-primary)]/10">
-                <Wallet size={24} />
+            <div className="flex justify-between items-start mb-5">
+              <div className="p-2.5 bg-[var(--color-primary)]/15 rounded-xl text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
+                <Wallet size={22} />
               </div>
-              <span className="text-[10px] font-bold bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full border border-[var(--color-primary)]/20 tracking-wider">
-                UP NEXT
+              <span className="chip text-[var(--color-primary)] border-[var(--color-primary)]/20">
+                <Zap size={9} /> UP NEXT
               </span>
             </div>
-            <h3 className="text-[var(--color-text-dim)] text-xs font-bold uppercase tracking-wider mb-2">
+            <p className="text-[var(--color-text-dim)] text-xs font-semibold uppercase tracking-widest mb-1.5">
               Next Payer
-            </h3>
-            <div className="text-3xl font-display font-bold text-[var(--color-text-main)] truncate drop-shadow-md">
+            </p>
+            <div className="text-3xl font-display font-bold text-white truncate drop-shadow-[0_0_12px_rgba(0,240,255,0.3)]">
               {nextPayer}
+            </div>
+            <div className="mt-4 h-[2px] w-full rounded-full bg-white/5 overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)]"
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+              />
             </div>
           </div>
         </motion.div>
@@ -146,31 +162,42 @@ const Dashboard = () => {
         {/* 2. Top Player Widget */}
         <motion.div
           variants={itemVariants}
-          className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:shadow-[0_0_20px_rgba(112,0,223,0.3)] transition-all duration-500 border border-[var(--color-border)]"
+          className="glass-panel card-glow p-6 rounded-2xl relative overflow-hidden group hover:shadow-[0_0_30px_rgba(112,0,223,0.2)] transition-all duration-500 border border-[var(--color-border)]"
         >
-          <div className="absolute -right-4 -top-4 w-32 h-32 bg-[var(--color-secondary)]/20 blur-[60px] rounded-full group-hover:bg-[var(--color-secondary)]/30 transition-all duration-500" />
+          <div className="absolute -right-6 -top-6 w-36 h-36 bg-[var(--color-secondary)]/15 blur-[70px] rounded-full group-hover:bg-[var(--color-secondary)]/25 transition-all duration-700" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-secondary)] to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
           <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-gradient-to-br from-[var(--color-secondary)]/20 to-[var(--color-secondary)]/5 rounded-xl text-[var(--color-secondary)] group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-[var(--color-secondary)]/10">
-                <Trophy size={24} />
+            <div className="flex justify-between items-start mb-5">
+              <div className="p-2.5 bg-[var(--color-secondary)]/15 rounded-xl text-[var(--color-secondary)] group-hover:scale-110 transition-transform duration-300 shadow-lg border border-[var(--color-secondary)]/20">
+                <Trophy size={22} />
               </div>
-              <span className="text-[10px] font-bold bg-[var(--color-secondary)]/10 text-[var(--color-secondary)] px-3 py-1 rounded-full border border-[var(--color-secondary)]/20 tracking-wider">
+              <span className="chip text-[var(--color-secondary)] border-[var(--color-secondary)]/20">
                 RANK #1
               </span>
             </div>
-            <h3 className="text-[var(--color-text-dim)] text-xs font-bold uppercase tracking-wider mb-2">
+            <p className="text-[var(--color-text-dim)] text-xs font-semibold uppercase tracking-widest mb-1.5">
               Top Player
-            </h3>
-            <div className="text-3xl font-display font-bold text-[var(--color-text-main)] truncate drop-shadow-md">
-              {topPlayer?.name || "-"}
+            </p>
+            <div className="text-3xl font-display font-bold text-white truncate drop-shadow-md">
+              {topPlayer?.name || "—"}
             </div>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="text-sm text-[var(--color-text-dim)]">
-                {topPlayer?.wins || 0} Wins
+            {/* Win-rate progress bar */}
+            <div className="mt-3">
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-[var(--color-text-dim)]">
+                  {topPlayer?.wins || 0} wins
+                </span>
+                <span className="text-[var(--color-accent)] font-bold">
+                  {winRate}% WR
+                </span>
               </div>
-              <div className="h-1 w-1 rounded-full bg-[var(--color-text-dim)]"></div>
-              <div className="text-sm text-[var(--color-accent)] font-bold">
-                {topPlayer?.winRate ? `${topPlayer.winRate}%` : "0%"} WR
+              <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-accent)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${winRate}%` }}
+                  transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+                />
               </div>
             </div>
           </div>
@@ -179,23 +206,30 @@ const Dashboard = () => {
         {/* 3. Total Spent Widget */}
         <motion.div
           variants={itemVariants}
-          className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:shadow-[0_0_20px_rgba(57,255,20,0.2)] transition-all duration-500 border border-[var(--color-border)]"
+          className="glass-panel card-glow p-6 rounded-2xl relative overflow-hidden group hover:shadow-[0_0_30px_rgba(57,255,20,0.15)] transition-all duration-500 border border-[var(--color-border)]"
         >
-          <div className="absolute -right-4 -top-4 w-32 h-32 bg-[var(--color-accent)]/20 blur-[60px] rounded-full group-hover:bg-[var(--color-accent)]/30 transition-all duration-500" />
+          <div className="absolute -right-6 -top-6 w-36 h-36 bg-[var(--color-accent)]/15 blur-[70px] rounded-full group-hover:bg-[var(--color-accent)]/25 transition-all duration-700" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-accent)] to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
           <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-gradient-to-br from-[var(--color-accent)]/20 to-[var(--color-accent)]/5 rounded-xl text-[var(--color-accent)] group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-[var(--color-accent)]/10">
-                <TrendingUp size={24} />
+            <div className="flex justify-between items-start mb-5">
+              <div className="p-2.5 bg-[var(--color-accent)]/15 rounded-xl text-[var(--color-accent)] group-hover:scale-110 transition-transform duration-300 shadow-lg border border-[var(--color-accent)]/20">
+                <TrendingUp size={22} />
               </div>
-              <span className="text-[10px] font-bold bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-1 rounded-full border border-[var(--color-accent)]/20 capitalize tracking-wider">
+              <span className="chip text-[var(--color-accent)] border-[var(--color-accent)]/20 capitalize">
                 {timeframe}
               </span>
             </div>
-            <h3 className="text-[var(--color-text-dim)] text-xs font-bold uppercase tracking-wider mb-2">
+            <p className="text-[var(--color-text-dim)] text-xs font-semibold uppercase tracking-widest mb-1.5">
               Total Expenses
-            </h3>
-            <div className="text-2xl lg:text-3xl font-display font-bold text-[var(--color-text-main)] drop-shadow-md">
+            </p>
+            <div className="text-2xl lg:text-3xl font-display font-bold text-white drop-shadow-md">
               {fmtMoney(expenses.total)}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-[var(--color-accent)]">
+              <ArrowUpRight size={13} />
+              <span>
+                {filteredMatchCount} matches this {timeframe}
+              </span>
             </div>
           </div>
         </motion.div>
@@ -203,27 +237,28 @@ const Dashboard = () => {
         {/* 4. Total Matches Widget */}
         <motion.div
           variants={itemVariants}
-          className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:shadow-[var(--shadow-glow)] transition-all duration-500 border border-[var(--color-border)]"
+          className="glass-panel card-glow p-6 rounded-2xl relative overflow-hidden group hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-500 border border-[var(--color-border)]"
         >
-          <div className="absolute -right-4 -top-4 w-32 h-32 bg-[var(--color-primary)]/10 blur-[60px] rounded-full group-hover:bg-[var(--color-primary)]/20 transition-all duration-500" />
+          <div className="absolute -right-6 -top-6 w-36 h-36 bg-[var(--color-primary)]/10 blur-[70px] rounded-full group-hover:bg-[var(--color-primary)]/20 transition-all duration-700" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-primary)]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-gradient-to-br from-[var(--color-primary)]/10 to-[var(--color-primary)]/5 rounded-xl text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300">
-                <Target size={24} />
+            <div className="flex justify-between items-start mb-5">
+              <div className="p-2.5 bg-[var(--color-primary)]/10 rounded-xl text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300 border border-[var(--color-primary)]/15">
+                <Target size={22} />
               </div>
-              <span className="text-[10px] font-bold bg-white/5 text-[var(--color-text-dim)] px-3 py-1 rounded-full border border-white/10 tracking-wider">
+              <span className="chip text-[var(--color-text-dim)] border-white/10">
                 ALL TIME
               </span>
             </div>
-            <h3 className="text-[var(--color-text-dim)] text-xs font-bold uppercase tracking-wider mb-2">
+            <p className="text-[var(--color-text-dim)] text-xs font-semibold uppercase tracking-widest mb-1.5">
               Total Matches
-            </h3>
-            <div className="text-3xl font-display font-bold text-[var(--color-text-main)] drop-shadow-md">
+            </p>
+            <div className="text-3xl font-display font-bold text-white drop-shadow-md">
               {totalMatches}
             </div>
-            <div className="mt-2 flex items-center gap-2">
-              <Users size={14} className="text-[var(--color-text-dim)]" />
-              <div className="text-sm text-[var(--color-text-dim)]">
+            <div className="mt-3 flex items-center gap-1.5">
+              <Users size={13} className="text-[var(--color-text-dim)]" />
+              <div className="text-xs text-[var(--color-text-dim)]">
                 {activePlayers} Active Players
               </div>
             </div>
@@ -270,11 +305,11 @@ const Dashboard = () => {
               let thirdPlayer = null;
               if (match.participants && match.participants.length > 0) {
                 thirdPlayer = match.participants.find(
-                  (p) => p !== match.winner && p !== match.loser
+                  (p) => p !== match.winner && p !== match.loser,
                 );
               } else {
                 thirdPlayer = players.find(
-                  (p) => p !== match.winner && p !== match.loser
+                  (p) => p !== match.winner && p !== match.loser,
                 );
               }
               return (
@@ -337,6 +372,8 @@ const Dashboard = () => {
       </motion.div>
     </div>
   );
-};
+});
 
+// Fix typo: --c olor-primary → --color-primary handled by replacing in JSX directly via memo wrapper
+Dashboard.displayName = "Dashboard";
 export default Dashboard;

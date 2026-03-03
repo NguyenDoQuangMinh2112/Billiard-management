@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useGame } from "../context/GameContext";
 import { billiardAPI } from "../services/api";
 import {
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const LeaderboardView = () => {
+const LeaderboardView = memo(() => {
   const { allStats } = useGame();
   const [sortKey, setSortKey] = useState("wins");
   const [viewMode, setViewMode] = useState("all"); // 'all' (Global) or 'today' (Daily)
@@ -25,22 +25,24 @@ const LeaderboardView = () => {
 
   // Fetch Daily Stats
   useEffect(() => {
-    const fetchDaily = async () => {
+    let cancelled = false;
+    const run = async () => {
       if (viewMode === "today") {
         setLoadingDaily(true);
         try {
           const res = await billiardAPI.getStats({ timeframe: "daily" });
-          if (res.success) {
-            setDailyStats(res.data);
-          }
+          if (!cancelled && res.success) setDailyStats(res.data);
         } catch (error) {
-          console.error("Failed to fetch daily stats", error);
+          if (!cancelled) console.error("Failed to fetch daily stats", error);
         } finally {
-          setLoadingDaily(false);
+          if (!cancelled) setLoadingDaily(false);
         }
       }
     };
-    fetchDaily();
+    run();
+    return () => {
+      cancelled = true;
+    };
   }, [viewMode]);
 
   const currentStats = viewMode === "all" ? allStats : dailyStats;
@@ -339,95 +341,159 @@ const LeaderboardView = () => {
         </div>
       )}
 
-      {/* Existing Table (Refined) */}
+      {/* Rankings Table */}
       <div className="glass-panel overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-2xl backdrop-blur-xl">
-        <div className="p-4 border-b border-[var(--color-border)] flex justify-between items-center">
-          <h3 className="font-bold text-lg text-[var(--color-text-dim)] flex items-center gap-2">
-            <Star size={18} className="text-yellow-500" /> Full Rankings
+        {/* Table header bar */}
+        <div className="p-4 md:p-5 border-b border-[var(--color-border)] flex justify-between items-center">
+          <h3 className="font-bold text-base flex items-center gap-2.5">
+            <span className="p-1.5 bg-yellow-500/15 rounded-lg border border-yellow-500/20">
+              <Star size={15} className="text-yellow-500" />
+            </span>
+            Full Rankings
           </h3>
-          <div className="text-xs text-[var(--color-text-dim)]">
-            {currentStats.length} Players
+          <div className="chip text-[var(--color-text-dim)]">
+            {currentStats.length} players
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-[var(--color-surface)] text-[var(--color-text-dim)] text-xs uppercase tracking-wider border-b border-[var(--color-border)]">
-                <th className="p-4">Rank</th>
-                <th className="p-4">Player</th>
+              <tr className="bg-[var(--color-surface)]/70 text-[var(--color-text-dim)] text-[11px] uppercase tracking-widest border-b border-[var(--color-border)]">
+                <th className="px-5 py-3.5 font-semibold">#</th>
+                <th className="px-5 py-3.5 font-semibold">Player</th>
                 <th
-                  className="p-4 cursor-pointer hover:text-[var(--color-text-main)] transition-colors text-center"
+                  className="px-5 py-3.5 font-semibold cursor-pointer hover:text-white transition-colors text-center select-none"
                   onClick={() => setSortKey("wins")}
                 >
-                  Wins {sortKey === "wins" && "↓"}
+                  Wins{" "}
+                  {sortKey === "wins" && (
+                    <span className="text-[var(--color-primary)]">↓</span>
+                  )}
                 </th>
-                <th className="p-4 text-center">Losses</th>
+                <th className="px-5 py-3.5 font-semibold text-center">
+                  Losses
+                </th>
                 <th
-                  className="p-4 cursor-pointer hover:text-[var(--color-text-main)] transition-colors text-center"
+                  className="px-5 py-3.5 font-semibold cursor-pointer hover:text-white transition-colors select-none"
                   onClick={() => setSortKey("winRate")}
                 >
-                  Win Rate {sortKey === "winRate" && "↓"}
+                  Win Rate{" "}
+                  {sortKey === "winRate" && (
+                    <span className="text-[var(--color-accent)]">↓</span>
+                  )}
                 </th>
-                <th className="p-4 hidden md:table-cell text-right">
-                  Total Invested
+                <th className="px-5 py-3.5 font-semibold hidden md:table-cell text-right">
+                  Invested
                 </th>
-                <th className="p-4 hidden md:table-cell text-center">Games</th>
+                <th className="px-5 py-3.5 font-semibold hidden md:table-cell text-center">
+                  Games
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--color-border)] text-sm">
+            <tbody className="divide-y divide-[var(--color-border)]/60 text-sm">
               {sortedStats.map((stat, index) => {
-                const winRate =
+                const wr =
                   stat.matchesPlayed > 0
-                    ? ((stat.wins / stat.matchesPlayed) * 100).toFixed(1)
-                    : "0.0";
+                    ? (stat.wins / stat.matchesPlayed) * 100
+                    : 0;
+                const wrDisplay = wr.toFixed(1);
+                const isTop3 = index < 3;
+                const rankColors = [
+                  {
+                    bg: "bg-yellow-500/15",
+                    text: "text-yellow-400",
+                    border: "border-yellow-500/40",
+                    glow: "shadow-yellow-500/20",
+                  },
+                  {
+                    bg: "bg-slate-400/15",
+                    text: "text-slate-300",
+                    border: "border-slate-400/40",
+                    glow: "shadow-slate-400/20",
+                  },
+                  {
+                    bg: "bg-orange-500/15",
+                    text: "text-orange-400",
+                    border: "border-orange-500/40",
+                    glow: "shadow-orange-500/20",
+                  },
+                ];
+                const rc = rankColors[index] || null;
 
                 return (
-                  <tr
+                  <motion.tr
                     key={stat.name}
-                    className="hover:bg-[var(--color-highlight)] transition-colors group"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    className="table-row-hover group relative"
                   >
-                    <td className="p-4">
+                    {/* Left rank accent line for top 3 */}
+                    <td className="pl-5 pr-3 py-4">
                       <div
-                        className={`
-                                                w-8 h-8 flex items-center justify-center rounded-full font-bold
-                                                ${
-                                                  index === 0
-                                                    ? "bg-yellow-500/20 text-yellow-500 border border-yellow-500/50"
-                                                    : index === 1
-                                                    ? "bg-gray-400/20 text-gray-300 border border-gray-400/50"
-                                                    : index === 2
-                                                    ? "bg-orange-500/20 text-orange-500 border border-orange-500/50"
-                                                    : "bg-[var(--color-surface)] text-[var(--color-text-dim)] border border-[var(--color-border)]"
-                                                }
-                                            `}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg font-black text-sm
+                        ${rc ? `${rc.bg} ${rc.text} border ${rc.border} shadow-md ${rc.glow}` : "bg-white/5 text-[var(--color-text-dim)] border border-white/8"}
+                      `}
                       >
                         {index + 1}
                       </div>
                     </td>
-                    <td className="p-4 font-medium text-[var(--color-text-main)]">
-                      {stat.name}
-                    </td>
-                    <td className="p-4 text-center font-bold text-green-500">
-                      {stat.wins}
-                    </td>
-                    <td className="p-4 text-center text-red-500">
-                      {stat.losses}
-                    </td>
-                    <td className="p-4 text-center text-[var(--color-text-main)]">
-                      <div className="flex items-center justify-center gap-2">
-                        <span>{winRate}%</span>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        {/* Avatar letter */}
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0
+                          ${isTop3 ? `bg-gradient-to-br ${index === 0 ? "from-yellow-600 to-yellow-400" : index === 1 ? "from-slate-500 to-slate-300" : "from-orange-600 to-orange-400"} text-black` : "bg-white/8 text-white/60"}
+                        `}
+                        >
+                          {stat.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <span
+                          className={`font-semibold ${isTop3 ? "text-white" : "text-white/80"}`}
+                        >
+                          {stat.name}
+                        </span>
                       </div>
                     </td>
-                    <td className="p-4 text-right font-mono text-[var(--color-text-dim)] hidden md:table-cell">
+                    <td className="px-5 py-4 text-center">
+                      <span className="font-bold text-green-400 tabular-nums">
+                        {stat.wins}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <span className="text-red-400 tabular-nums">
+                        {stat.losses}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 min-w-[120px]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+                          <motion.div
+                            className={`h-full rounded-full ${wr >= 60 ? "bg-[var(--color-accent)]" : wr >= 40 ? "bg-[var(--color-primary)]" : "bg-[var(--color-text-dim)]"}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(wr, 100)}%` }}
+                            transition={{
+                              duration: 0.8,
+                              delay: index * 0.06 + 0.3,
+                              ease: "easeOut",
+                            }}
+                          />
+                        </div>
+                        <span className="text-xs font-mono text-[var(--color-text-dim)] w-10 text-right tabular-nums">
+                          {wrDisplay}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-right font-mono text-[var(--color-text-dim)] text-xs hidden md:table-cell tabular-nums">
                       {new Intl.NumberFormat("vi-VN", {
                         style: "currency",
                         currency: "VND",
                       }).format(stat.totalSpent)}
                     </td>
-                    <td className="p-4 text-center text-[var(--color-text-dim)] hidden md:table-cell">
+                    <td className="px-5 py-4 text-center text-[var(--color-text-dim)] hidden md:table-cell tabular-nums">
                       {stat.matchesPlayed}
                     </td>
-                  </tr>
+                  </motion.tr>
                 );
               })}
             </tbody>
@@ -435,13 +501,15 @@ const LeaderboardView = () => {
         </div>
       </div>
 
-      <div className="mt-8 text-center">
-        <p className="text-[var(--color-text-dim)] text-xs uppercase tracking-widest">
+      <div className="mt-10 text-center">
+        <p className="text-[var(--color-text-dim)]/40 text-[10px] uppercase tracking-[0.25em]">
           Quang Minh • From • Withlove
         </p>
       </div>
     </div>
   );
-};
+});
+
+LeaderboardView.displayName = "LeaderboardView";
 
 export default LeaderboardView;
