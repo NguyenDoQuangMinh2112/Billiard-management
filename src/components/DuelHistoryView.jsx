@@ -143,6 +143,16 @@ const SessionCard = ({ session, onDelete }) => {
 
         {/* Winner badge */}
         <div className="shrink-0 flex items-center gap-3">
+          <span
+            className={`hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+              session.status === "completed"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+                : "bg-amber-500/10 border-amber-500/20 text-amber-300"
+            }`}
+          >
+            {session.status === "completed" ? "Completed" : "Active"}
+          </span>
+
           {winnerName ? (
             <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold">
               <Trophy size={11} />
@@ -307,7 +317,7 @@ const DuelHistoryView = () => {
         <div className="flex items-center gap-2 text-[var(--color-text-dim)] text-sm">
           <History size={16} />
           <span>
-            {sessions.length} completed session
+            {sessions.length} session
             {sessions.length !== 1 ? "s" : ""}
           </span>
         </div>
@@ -346,9 +356,9 @@ const DuelHistoryView = () => {
       ) : sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-[var(--color-text-dim)]">
           <History size={36} className="opacity-30" />
-          <p className="text-sm">No completed sessions yet</p>
+          <p className="text-sm">No 1v1 sessions yet</p>
           <p className="text-xs opacity-60">
-            Start a 1v1 session and end it to see history here
+            Play at least one round to see it in history
           </p>
         </div>
       ) : (

@@ -205,6 +205,10 @@ class BilliardAPI {
     return this.request("/duel/players");
   }
 
+  async getDuelPlayerDirectory() {
+    return this.request("/duel/players/directory");
+  }
+
   async getDuelLeaderboard(limit = 20) {
     return this.request(`/duel/leaderboard?limit=${limit}`);
   }

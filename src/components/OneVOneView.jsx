@@ -18,6 +18,8 @@ import {
   StopCircle,
   History,
   Medal,
+  AlertCircle,
+  Lock,
 } from "lucide-react";
 import { useToast } from "./Toast";
 import { billiardAPI } from "../services/api";
@@ -44,15 +46,24 @@ const QUICK_AMOUNTS = [50000, 100000, 150000, 200000];
 const DEFAULT_PLAYER = { name: "", wins: 0, losses: 0 };
 
 // ── Mini scoreboard counter ──────────────────
-const ScoreCounter = ({ value, onInc, onDec, color }) => (
+const ScoreCounter = ({
+  value,
+  onInc,
+  onDec,
+  color,
+  disabled = false,
+  disabledHint = "",
+}) => (
   <div className="flex items-center gap-3">
     <button
       onClick={onDec}
-      className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all active:scale-90 cursor-pointer ${
+      disabled={disabled}
+      title={disabled ? disabledHint : "Decrease"}
+      className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all active:scale-90 ${
         color === "green"
           ? "border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
           : "border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400"
-      }`}
+      } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
     >
       <Minus size={16} />
     </button>
@@ -72,11 +83,13 @@ const ScoreCounter = ({ value, onInc, onDec, color }) => (
 
     <button
       onClick={onInc}
-      className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all active:scale-90 cursor-pointer ${
+      disabled={disabled}
+      title={disabled ? disabledHint : "Increase"}
+      className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all active:scale-90 ${
         color === "green"
           ? "border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
           : "border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400"
-      }`}
+      } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
     >
       <Plus size={16} />
     </button>
@@ -84,7 +97,15 @@ const ScoreCounter = ({ value, onInc, onDec, color }) => (
 );
 
 // ── Player card ───────────────────────────────
-const PlayerCard = ({ player, index, onChange, scores, onScoreChange }) => {
+const PlayerCard = ({
+  player,
+  index,
+  onChange,
+  scores,
+  onScoreChange,
+  canEditScores,
+  playerOptions = [],
+}) => {
   const isLeft = index === 0;
   const diff = (scores?.wins ?? 0) - (scores?.losses ?? 0);
   const isLeading = diff > 0;
@@ -134,8 +155,17 @@ const PlayerCard = ({ player, index, onChange, scores, onScoreChange }) => {
         value={player.name}
         onChange={(e) => onChange(index, "name", e.target.value)}
         placeholder={`Player ${index + 1}`}
+        list={`duel-player-options-${index}`}
         className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-[var(--color-primary)]/60 transition-colors placeholder:text-white/20 mb-6"
       />
+      <datalist id={`duel-player-options-${index}`}>
+        {playerOptions.map((name) => (
+          <option key={`${index}-${name}`} value={name} />
+        ))}
+      </datalist>
+      <p className="-mt-4 mb-4 text-[10px] text-[var(--color-text-dim)]">
+        Select an existing player or type a new name
+      </p>
 
       {/* Score section */}
       <div className="space-y-4">
@@ -146,6 +176,8 @@ const PlayerCard = ({ player, index, onChange, scores, onScoreChange }) => {
           <ScoreCounter
             value={scores?.wins ?? 0}
             color="green"
+            disabled={!canEditScores}
+            disabledHint="Click Start Session first to unlock score controls"
             onInc={() => onScoreChange(index, "wins", 1)}
             onDec={() => onScoreChange(index, "wins", -1)}
           />
@@ -157,6 +189,8 @@ const PlayerCard = ({ player, index, onChange, scores, onScoreChange }) => {
           <ScoreCounter
             value={scores?.losses ?? 0}
             color="red"
+            disabled={!canEditScores}
+            disabledHint="Click Start Session first to unlock score controls"
             onInc={() => onScoreChange(index, "losses", 1)}
             onDec={() => onScoreChange(index, "losses", -1)}
           />
@@ -286,6 +320,25 @@ const OneVOneView = () => {
 
   // Active tab
   const [activeTab, setActiveTab] = useState("match");
+  const [playerDirectory, setPlayerDirectory] = useState([]);
+  const [loadingPlayerDirectory, setLoadingPlayerDirectory] = useState(false);
+
+  const loadPlayerDirectory = useCallback(async () => {
+    setLoadingPlayerDirectory(true);
+    try {
+      const res = await billiardAPI.getDuelPlayerDirectory();
+      if (!res.success) throw new Error(res.error || "Failed to load players");
+      setPlayerDirectory(res.data || []);
+    } catch (err) {
+      showError(err.message || "Failed to load 1v1 players");
+    } finally {
+      setLoadingPlayerDirectory(false);
+    }
+  }, [showError]);
+
+  useEffect(() => {
+    loadPlayerDirectory();
+  }, [loadPlayerDirectory]);
 
   // ── helpers ──────────────────────────────────
   const handlePlayerChange = (idx, field, val) => {
@@ -296,14 +349,18 @@ const OneVOneView = () => {
     });
   };
 
-  const handleScoreChange = useCallback((playerIdx, type, delta) => {
-    setScores((prev) => {
-      const next = prev.map((s) => ({ ...s }));
-      const newVal = Math.max(0, next[playerIdx][type] + delta);
-      next[playerIdx] = { ...next[playerIdx], [type]: newVal };
-      return next;
-    });
-  }, []);
+  const handleScoreChange = useCallback(
+    (playerIdx, type, delta) => {
+      if (!activeSession) return;
+      setScores((prev) => {
+        const next = prev.map((s) => ({ ...s }));
+        const newVal = Math.max(0, next[playerIdx][type] + delta);
+        next[playerIdx] = { ...next[playerIdx], [type]: newVal };
+        return next;
+      });
+    },
+    [activeSession],
+  );
 
   const resetScores = () => {
     setScores([
@@ -340,9 +397,30 @@ const OneVOneView = () => {
       if (!res.success)
         throw new Error(res.error || "Failed to create session");
       setActiveSession(res.data);
+      setPlayerDirectory((prev) => {
+        const map = new Map((prev || []).map((p) => [p.name.toLowerCase(), p]));
+        if (!map.has(p0.toLowerCase())) {
+          map.set(p0.toLowerCase(), {
+            id: -Date.now(),
+            name: p0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+        if (!map.has(p1.toLowerCase())) {
+          map.set(p1.toLowerCase(), {
+            id: -Date.now() - 1,
+            name: p1,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+        return Array.from(map.values());
+      });
       setSessionHistory([]);
       resetScores();
       setBillCost("");
+      loadPlayerDirectory();
       success(`Session started: ${p0} vs ${p1} 🎮`);
     } catch (err) {
       showError(err.message || "Could not start session");
@@ -404,6 +482,11 @@ const OneVOneView = () => {
     const p0 = players[0].name.trim() || "Player 1";
     const p1 = players[1].name.trim() || "Player 2";
 
+    if (!activeSession) {
+      showError("Please start a session before confirming rounds");
+      return;
+    }
+
     if (!billCost || parseFloat(billCost) <= 0) {
       showError("Please enter a valid bill amount");
       return;
@@ -427,56 +510,35 @@ const OneVOneView = () => {
       const payerRaw = payerTypeMap[payerIndex];
       const payerName = payerIndex === 2 ? "Split" : [p0, p1][payerIndex];
 
-      if (activeSession) {
-        // Save round to DB
-        const res = await billiardAPI.addDuelRound(
-          activeSession.id,
-          scores[0].wins,
-          scores[0].losses,
-          scores[1].wins,
-          scores[1].losses,
-          cost,
-          payerRaw,
-        );
-        if (!res.success) throw new Error(res.error || "Failed to save round");
+      // Save round to DB
+      const res = await billiardAPI.addDuelRound(
+        activeSession.id,
+        scores[0].wins,
+        scores[0].losses,
+        scores[1].wins,
+        scores[1].losses,
+        cost,
+        payerRaw,
+      );
+      if (!res.success) throw new Error(res.error || "Failed to save round");
 
-        const entry = {
-          id: res.data?.id || Date.now(),
-          date: res.data?.played_at || new Date().toISOString(),
-          player1: { name: p0, ...scores[0] },
-          player2: { name: p1, ...scores[1] },
-          winner: winnerName,
-          loser: loserName,
-          cost,
-          payer: payerName,
-          payerRaw,
-        };
-        setSessionHistory((prev) => [entry, ...prev]);
-        success(
-          winnerName
-            ? `Round saved! ${winnerName} wins 🎉`
-            : "Draw! Round saved 🤝",
-        );
-      } else {
-        // Offline fallback (no active session)
-        const entry = {
-          id: Date.now(),
-          date: new Date().toISOString(),
-          player1: { name: p0, ...scores[0] },
-          player2: { name: p1, ...scores[1] },
-          winner: winnerName,
-          loser: loserName,
-          cost,
-          payer: payerName,
-          payerRaw,
-        };
-        setSessionHistory((prev) => [entry, ...prev]);
-        success(
-          winnerName
-            ? `${winnerName} wins 🎉 (not saved — start a session first)`
-            : "Draw! 🤝",
-        );
-      }
+      const entry = {
+        id: res.data?.id || Date.now(),
+        date: res.data?.played_at || new Date().toISOString(),
+        player1: { name: p0, ...scores[0] },
+        player2: { name: p1, ...scores[1] },
+        winner: winnerName,
+        loser: loserName,
+        cost,
+        payer: payerName,
+        payerRaw,
+      };
+      setSessionHistory((prev) => [entry, ...prev]);
+      success(
+        winnerName
+          ? `Round saved! ${winnerName} wins 🎉`
+          : "Draw! Round saved 🤝",
+      );
 
       setResult({ winner: winnerName, loser: loserName, cost, payerName });
       resetScores();
@@ -491,6 +553,13 @@ const OneVOneView = () => {
   // ── session stats ─────────────────────────────
   const p0Name = players[0].name.trim() || "Player 1";
   const p1Name = players[1].name.trim() || "Player 2";
+  const playerNameOptions = Array.from(
+    new Set(
+      (playerDirectory || [])
+        .map((p) => p?.name?.trim())
+        .filter((name) => Boolean(name)),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "vi", { sensitivity: "base" }));
 
   const sessionStats = {
     [p0Name]: { wins: 0, losses: 0, spent: 0 },
@@ -522,15 +591,23 @@ const OneVOneView = () => {
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold flex items-center gap-3 text-gradient">
-            <Swords
-              className="hidden md:block text-[var(--color-primary)]"
-              strokeWidth={2.5}
-            />
-            1v1 Match
+          <h1 className="duel-title text-4xl md:text-5xl font-display font-bold flex items-center gap-3">
+            <span className="duel-title-icon-wrap hidden md:inline-flex">
+              <Swords
+                className="duel-title-icon text-[var(--color-primary)]"
+                strokeWidth={2.5}
+              />
+            </span>
+            <span className="duel-title-text" data-text="1v1 Match">
+              1v1 Match
+            </span>
           </h1>
           <p className="text-[var(--color-text-dim)] mt-2 text-lg font-light">
             Head-to-head scoreboard &amp; payment tracker
+          </p>
+          <p className="text-[var(--color-text-dim)] mt-1 text-xs">
+            Player directory:{" "}
+            {loadingPlayerDirectory ? "loading..." : playerNameOptions.length}
           </p>
         </div>
 
@@ -555,7 +632,7 @@ const OneVOneView = () => {
             <button
               onClick={handleStartSession}
               disabled={isStarting || activeTab !== "match"}
-              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-black font-bold rounded-2xl transition-all hover:brightness-110 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-black font-bold rounded-2xl transition-all hover:brightness-110 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer animate-pulse"
             >
               {isStarting ? (
                 <Loader size={18} className="animate-spin" />
@@ -602,6 +679,25 @@ const OneVOneView = () => {
         })}
       </div>
 
+      {activeTab === "match" && playerNameOptions.length > 0 && (
+        <div className="mb-5 text-xs text-[var(--color-text-dim)] flex flex-wrap gap-2 items-center">
+          <span>Available 1v1 players:</span>
+          {playerNameOptions.slice(0, 8).map((name) => (
+            <span
+              key={name}
+              className="px-2 py-1 rounded-lg bg-white/5 border border-white/10"
+            >
+              {name}
+            </span>
+          ))}
+          {playerNameOptions.length > 8 && (
+            <span className="opacity-70">
+              +{playerNameOptions.length - 8} more
+            </span>
+          )}
+        </div>
+      )}
+
       {/* ── Tab content ── */}
       <AnimatePresence mode="wait">
         {/* MATCH TAB */}
@@ -616,6 +712,27 @@ const OneVOneView = () => {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
               {/* ── Left: Scoreboard ── */}
               <div className="xl:col-span-2 space-y-6">
+                {!activeSession && (
+                  <div className="glass-panel rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle
+                        size={18}
+                        className="text-amber-300 mt-0.5 flex-shrink-0"
+                      />
+                      <div>
+                        <p className="text-sm font-bold text-amber-200">
+                          Session not started
+                        </p>
+                        <p className="text-xs text-amber-100/90 mt-1">
+                          Enter both player names, then click Start Session
+                          (top-right). Score +/- and Confirm Round are locked
+                          until a session is active.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* VS Header */}
                 <div className="glass-panel rounded-3xl border border-[var(--color-border)] p-6 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-50" />
@@ -630,6 +747,7 @@ const OneVOneView = () => {
                     </h3>
                     <button
                       onClick={resetScores}
+                      disabled={!activeSession}
                       className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm text-[var(--color-text-dim)] hover:text-white transition-all cursor-pointer"
                     >
                       <RotateCcw size={15} />
@@ -647,9 +765,18 @@ const OneVOneView = () => {
                         scores={scores[i]}
                         onChange={handlePlayerChange}
                         onScoreChange={handleScoreChange}
+                        canEditScores={Boolean(activeSession)}
+                        playerOptions={playerNameOptions}
                       />
                     ))}
                   </div>
+
+                  {!activeSession && (
+                    <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-xs text-[var(--color-text-dim)] text-center flex items-center justify-center gap-2">
+                      <Lock size={14} className="text-amber-300" />
+                      Score controls are locked. Click Start Session first.
+                    </div>
+                  )}
 
                   {/* VS divider result */}
                   <div className="mt-6 text-center">
@@ -768,11 +895,12 @@ const OneVOneView = () => {
                         <button
                           key={label}
                           onClick={() => setPayerIndex(i)}
+                          disabled={!activeSession}
                           className={`py-3 rounded-xl text-sm font-bold transition-all cursor-pointer truncate px-2 ${
                             payerIndex === i
                               ? "bg-[var(--color-primary)] text-black shadow-[0_0_12px_rgba(0,240,255,0.3)]"
                               : "bg-white/5 text-[var(--color-text-dim)] hover:bg-white/10 hover:text-white border border-white/5"
-                          }`}
+                          } ${!activeSession ? "opacity-50 cursor-not-allowed hover:bg-white/5 hover:text-[var(--color-text-dim)]" : ""}`}
                         >
                           {label}
                         </button>
@@ -809,6 +937,7 @@ const OneVOneView = () => {
                         value={billCost}
                         onChange={(e) => setBillCost(e.target.value)}
                         placeholder="0"
+                        disabled={!activeSession}
                         className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 pl-10 text-3xl font-mono font-bold text-white focus:border-[var(--color-accent)] focus:bg-black/60 outline-none transition-all placeholder:text-white/10 shadow-inner"
                       />
                     </div>
@@ -817,7 +946,8 @@ const OneVOneView = () => {
                         <button
                           key={amt}
                           onClick={() => setBillCost(amt.toString())}
-                          className="px-3 py-1.5 bg-white/5 hover:bg-[var(--color-primary)]/20 border border-white/5 hover:border-[var(--color-primary)]/50 rounded-lg text-xs font-mono text-[var(--color-text-dim)] hover:text-[var(--color-primary)] transition-all cursor-pointer"
+                          disabled={!activeSession}
+                          className="px-3 py-1.5 bg-white/5 hover:bg-[var(--color-primary)]/20 border border-white/5 hover:border-[var(--color-primary)]/50 rounded-lg text-xs font-mono text-[var(--color-text-dim)] hover:text-[var(--color-primary)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:text-[var(--color-text-dim)]"
                         >
                           {amt / 1000}k
                         </button>
@@ -866,7 +996,7 @@ const OneVOneView = () => {
                   {/* Confirm button */}
                   <button
                     onClick={handleConfirm}
-                    disabled={isSubmitting || !billCost}
+                    disabled={isSubmitting || !billCost || !activeSession}
                     className="w-full py-5 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] hover:brightness-110 text-white font-bold text-xl rounded-2xl transition-all shadow-lg shadow-[var(--color-primary)]/20 hover:shadow-[var(--color-primary)]/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden group cursor-pointer"
                   >
                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 skew-y-12" />
